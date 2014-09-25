@@ -1,14 +1,26 @@
 #pragma once
 
 #include "stdafx.h"
+#include <map>
+#include "Directory_watcher.h"
 
 class FTPWorker;
 
 class CMainDlg : public CDialog
 {
-	CListCtrl *pListBox = nullptr;
+	
+public:
+	std::map<CString,DWORD> List_cache;
+	CListCtrl *pListBox;
+	CEdit *pEdit_FTP_server;	//; = ; (CEdit*)GetDlgItem(IDC_EDIT1);
+	CButton *pButton_Refresh;
+	CButton *pButton_Update;
+	CButton *pButton_Open;
+	CButton *pButton_Exit;
+	CButton *pButton_Connect;
 
-	FTPWorker *ftp = nullptr;
+//	Watcher_str struct_for_watcher;
+	FTPWorker *ftp;
 
 	HANDLE hNotificationThread = 0;
 

@@ -1,6 +1,8 @@
 #include "CMainDlg.h"
 #include "CFTPWorker.h"
 
+
+
 BEGIN_MESSAGE_MAP(CMainDlg,CDialog)
 	ON_COMMAND(IDC_CONNECT, OnConnectButtonClick)
 	ON_COMMAND(IDC_REFRESH, OnRefreshButtonClick)
@@ -11,6 +13,7 @@ END_MESSAGE_MAP()
 
 CMainDlg::CMainDlg() : CDialog(CMainDlg::IDD)
 {	
+	ftp = 0;
 }
 
 CMainDlg::~CMainDlg()
@@ -25,7 +28,20 @@ BOOL CMainDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
+	InitializeCriticalSection(&struct_for_watcher.List_lock);
+
 	pListBox = new CListCtrl();
+
+	pEdit_FTP_server = (CEdit*)GetDlgItem(IDC_EDIT1);
+	pButton_Refresh = (CButton*)GetDlgItem(IDC_REFRESH);
+	pButton_Update = (CButton*)GetDlgItem(IDC_UPDATE);
+	pButton_Open = (CButton*)GetDlgItem(IDC_OPEN);
+	pButton_Exit = (CButton*)GetDlgItem(IDC_EXIT);
+	pButton_Connect = (CButton*)GetDlgItem(IDC_CONNECT);
+
+	pButton_Refresh->EnableWindow(FALSE);
+	pButton_Update->EnableWindow(FALSE);
+	pButton_Open->EnableWindow(FALSE);
 
 	RECT rect;
 	rect.left = 30;
@@ -51,11 +67,13 @@ BOOL CMainDlg::OnInitDialog()
 	pColumn.pszText = L"Modified";
 	pListBox->InsertColumn(2, &pColumn);
 
+	pListBox->EnableWindow(FALSE);
+
+
 	return FALSE;  
 }
 
 
-//
 
 void CMainDlg::OnConnectButtonClick()
 {
@@ -74,15 +92,23 @@ void CMainDlg::OnConnectButtonClick()
 
 		if (ftp->ConnectServer(wszFTP, login, pass))
 		{
-			// start notification thread
-
-			hNotificationThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)CheckDirectoryChanges, 0, 0, 0);
+			pButton_Refresh->EnableWindow(TRUE);
+			pButton_Update->EnableWindow(TRUE);
+			pButton_Open->EnableWindow(TRUE);
+			pListBox->EnableWindow(TRUE);
 
 			// update list
 			OnRefreshButtonClick();
+ 
 		}
 		else
+		{
+			CString err_msg;
+			err_msg.AppendFormat(L"Error = %d", ftp->GetErrorCode());
 			delete ftp;
+			MessageBoxW(err_msg.GetBuffer(), L"Can't connect to a ftp server", MB_ICONWARNING);
+		}
+
 	}
 }
 
@@ -105,7 +131,11 @@ void CMainDlg::OnRefreshButtonClick()
 
 			if (pFile)
 			{
+				EnterCriticalSection(&struct_for_watcher.List_lock);
+				List_cache[pFile] = index;
 				pListBox->InsertItem(index,pFile);
+
+				LeaveCriticalSection(&struct_for_watcher.List_lock);
 				index++;
 			}
 
