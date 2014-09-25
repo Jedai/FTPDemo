@@ -1,5 +1,7 @@
-
+#include "stdafx.h"
+#include "CMainDlg.h"
 #include "Directory_watcher.h"
+
 
 DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 {
@@ -31,7 +33,7 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 		if( ReadDirectoryChangesW(watch_dir, file_change_inf, 0x1000, 0, FILE_NOTIFY_CHANGE_LAST_WRITE, &ret_bytes,NULL,NULL) )
 		{
 			current_file_change_inf = file_change_inf;
-			list_cache = &watch_str->dlg->List_cache;
+			list_cache = &((CMainDlg*)watch_str->dlg)->List_cache;
 			do
 			{
 				file_length = current_file_change_inf->FileNameLength;
@@ -41,7 +43,7 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 
 				EnterCriticalSection(&watch_str->List_lock);
 
-				index_count = watch_str->dlg->pListBox->GetItemCount();	
+				index_count = ((CMainDlg*)watch_str->dlg)->pListBox->GetItemCount();	
 				it = list_cache->find(buf_file_name);
 				if (it != list_cache->end())
 				{
@@ -50,7 +52,7 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 					{
 						buf_file_name[file_length/sizeof(wchar_t)] = '*';
 						buf_file_name[file_length/sizeof(wchar_t) + 1*sizeof(wchar_t)] = 0;
-						watch_str->dlg->pListBox->InsertItem(index_in_map,buf_file_name);
+						((CMainDlg*)watch_str->dlg)->pListBox->InsertItem(index_in_map,buf_file_name);
 					}
 				}
 				else

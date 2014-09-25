@@ -85,12 +85,14 @@
     <ClInclude Include="CFTPWorker.h" />
     <ClInclude Include="CMainDlg.h" />
     <ClInclude Include="definitions.h" />
+    <ClInclude Include="Directory_watcher.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CFTPDemo.cpp" />
     <ClCompile Include="CFTPWorker.cpp" />
     <ClCompile Include="CMainDlg.cpp" />
+    <ClCompile Include="Directory_watcher.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
