@@ -25,6 +25,12 @@ BOOL CMainDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
+	pConnectButton = (CButton*)GetDlgItem(IDC_CONNECT);
+	pRefreshButton = (CButton*)GetDlgItem(IDC_REFRESH);
+	pUpdateButton = (CButton*)GetDlgItem(IDC_UPDATE);
+	pOpenButton = (CButton*)GetDlgItem(IDC_OPEN);
+	pExitButton = (CButton*)GetDlgItem(IDC_EXIT);
+
 	pListBox = new CListCtrl();
 
 	RECT rect;

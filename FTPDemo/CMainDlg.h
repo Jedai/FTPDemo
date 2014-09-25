@@ -6,6 +6,12 @@ class FTPWorker;
 
 class CMainDlg : public CDialog
 {
+	CButton *pConnectButton = nullptr;
+	CButton *pRefreshButton = nullptr;
+	CButton *pUpdateButton = nullptr;
+	CButton *pOpenButton = nullptr;
+	CButton *pExitButton = nullptr;
+
 	CListCtrl *pListBox = nullptr;
 
 	FTPWorker *ftp = nullptr;
