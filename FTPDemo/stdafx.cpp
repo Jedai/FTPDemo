@@ -6,6 +6,9 @@ void CheckDirectoryChanges(LPVOID pParam)
 {
 	bool bWait = true;
 
+	if (!pParam)
+		return;
+
 	HANDLE chng = FindFirstChangeNotification((wchar_t*)pParam, false, FILE_NOTIFY_CHANGE_LAST_WRITE);
 
 	while (bWait)

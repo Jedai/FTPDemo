@@ -12,6 +12,8 @@ class CMainDlg : public CDialog
 	CButton *pOpenButton = nullptr;
 	CButton *pExitButton = nullptr;
 
+	CEdit *pEditBox = nullptr;
+
 	CListCtrl *pListBox = nullptr;
 
 	FTPWorker *ftp = nullptr;

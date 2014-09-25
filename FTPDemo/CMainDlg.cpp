@@ -27,9 +27,17 @@ BOOL CMainDlg::OnInitDialog()
 
 	pConnectButton = (CButton*)GetDlgItem(IDC_CONNECT);
 	pRefreshButton = (CButton*)GetDlgItem(IDC_REFRESH);
+	if (pRefreshButton)
+		pRefreshButton->EnableWindow(false);
 	pUpdateButton = (CButton*)GetDlgItem(IDC_UPDATE);
+	if (pUpdateButton)
+		pUpdateButton->EnableWindow(false);
 	pOpenButton = (CButton*)GetDlgItem(IDC_OPEN);
+	if (pOpenButton)
+		pOpenButton->EnableWindow(false);
 	pExitButton = (CButton*)GetDlgItem(IDC_EXIT);
+
+	pEditBox = (CEdit*)GetDlgItem(IDC_EDIT1);
 
 	pListBox = new CListCtrl();
 
@@ -70,22 +78,21 @@ void CMainDlg::OnConnectButtonClick()
 
 	if (ftp && !ftp->IsConnected()) 
 	{
-		wchar_t wszFTP[64] = L"node0.net2ftp.ru";                   // node0.net2ftp.ru
-		wchar_t *login = L"IL.job@yandex.ru"; // L"anonymous"
-		wchar_t *pass = L"af856f9c5ba5";      // L"anonymous"
-
-		//CEdit *pEdit = (CEdit*)GetDlgItem(IDC_EDIT1);
+		wchar_t wszFTP[64] = L"node0.net2ftp.ru";                  
+		wchar_t *login = L"IL.job@yandex.ru"; 
+		wchar_t *pass = L"af856f9c5ba5";      
 
 		//pEdit->GetWindowTextW(wszFTP, 63);
 
 		if (ftp->ConnectServer(wszFTP, login, pass))
 		{
 			// start notification thread
-
 			hNotificationThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)CheckDirectoryChanges, 0, 0, 0);
 
 			// update list
 			OnRefreshButtonClick();
+
+			pRefreshButton->EnableWindow(true);
 		}
 		else
 			delete ftp;
@@ -113,9 +120,12 @@ void CMainDlg::OnRefreshButtonClick()
 			{
 				pListBox->InsertItem(index,pFile);
 				index++;
-			}
 
-			// update buttons
+				if (!pOpenButton->IsWindowEnabled())
+					pOpenButton->EnableWindow(true);
+				if (!pUpdateButton->IsWindowEnabled())
+					pOpenButton->EnableWindow(true);
+			}
 		}
 	}
 }
@@ -124,13 +134,13 @@ void CMainDlg::OnRefreshButtonClick()
 void CMainDlg::OnUpdateButtonClick()
 {
 	wchar_t wszRemoteFile[128];
-	wchar_t wszLocalFile[128];
+	//wchar_t wszLocalFile[128];
 
 	if (ftp && ftp->IsConnected())
 	{
 		int index = pListBox->GetSelectionMark();
 
-		wcscpy(wszRemoteFile,pListBox->GetItemText(index, 0));
+		wcscpy_s(wszRemoteFile, sizeof(wszRemoteFile)-1, pListBox->GetItemText(index, 0));
 
 		ftp->UpdateFile(wszRemoteFile, wszRemoteFile);
 	}
@@ -139,17 +149,18 @@ void CMainDlg::OnUpdateButtonClick()
 void CMainDlg::OnOpenButtonClick()
 {
 	wchar_t wszRemoteFile[128];
-	wchar_t wszLocalFile[128];
+	//wchar_t wszLocalFile[128];
 
 	if (ftp && ftp->IsConnected())
 	{
 		int index = pListBox->GetSelectionMark();
 
-		wcscpy(wszRemoteFile, pListBox->GetItemText(index, 0));
+		wcscpy_s(wszRemoteFile, sizeof(wszRemoteFile)-1, pListBox->GetItemText(index, 0));
 
 		ftp->OpenFile(wszRemoteFile, wszRemoteFile);
 
 		// shell execute to open file?
+		ShellExecute(NULL, L"open", wszRemoteFile, NULL, NULL, SW_SHOW);
 	}
 }
 
@@ -161,4 +172,6 @@ void CMainDlg::OnExitButtonClick()
 
 	if (ftp)
 		delete ftp;
+
+	EndDialog(0);
 }

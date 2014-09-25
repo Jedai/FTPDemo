@@ -6,8 +6,8 @@ FTPWorker::FTPWorker()
 {
 	wcscpy(wszAgentName, L"FTPDemoClient");
 	wcscpy(wszServer, L"");
-	wcscpy(wszUser, L"anonymous");
-	wcscpy(wszPassword, L"");
+	wcscpy(wszUser,L"anonymous");
+	wcscpy(wszPassword, L"anonymous");
 	wcscpy(wszFileName, L"");
 }
 
@@ -22,11 +22,11 @@ FTPWorker::~FTPWorker()
 bool FTPWorker::ConnectServer(wchar_t *pwszServer, wchar_t *pwszUser, wchar_t *pwszPassword)
 {
 	if (pwszServer)
-		wcscpy(wszServer, pwszServer);
+		wcscpy_s(wszServer, sizeof(wszServer)-1, pwszServer);
 	if (pwszUser)
-		wcscpy(wszUser, pwszUser);
+		wcscpy_s(wszUser, sizeof(wszUser)-1, pwszUser);
 	if (pwszPassword)
-		wcscpy(wszPassword, pwszPassword);
+		wcscpy_s(wszPassword, sizeof(wszPassword)-1, pwszPassword);
 
 
 	hInetConnection = InternetOpen(wszAgentName, 0, 0, 0, 0);
@@ -64,7 +64,7 @@ bool FTPWorker::EnumerateFiles(bool bFirst)
 		hFindHandle = FtpFindFirstFile(hFTPConnection, nullptr, &findData, INTERNET_FLAG_NEED_FILE, 0);
 		if (hFindHandle)
 		{
-			wcscpy(wszFileName, findData.cFileName);
+			wcscpy_s(wszFileName, sizeof(wszFileName)-1, findData.cFileName);
 			bResult = true;
 		}
 		else
@@ -76,7 +76,7 @@ bool FTPWorker::EnumerateFiles(bool bFirst)
 		{
 			if (InternetFindNextFile(hFindHandle, &findData))
 			{
-				wcscpy(wszFileName, findData.cFileName);
+				wcscpy_s(wszFileName, sizeof(wszFileName)-1, findData.cFileName);
 				bResult = true;
 			}
 			else
