@@ -1,7 +1,8 @@
 #pragma once
 
 #include "stdafx.h"
-#include "CMainDlg.h"
+
+class CMainDlg;
 
 typedef struct _Watcher_str
 {

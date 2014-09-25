@@ -19,7 +19,7 @@ public:
 	CButton *pButton_Exit;
 	CButton *pButton_Connect;
 
-//	Watcher_str struct_for_watcher;
+	Watcher_str struct_for_watcher;
 	FTPWorker *ftp;
 
 	HANDLE hNotificationThread = 0;
