@@ -7,10 +7,11 @@
 
 #include <afxwin.h>
 
+#include <vector>
 
 #ifndef RC_INVOKED
-#include <afxlistctrl.h>
-//#include <afxcmn.h> 
+#include <afxcmn.h>
+#include "CStyledListCtrl.h"
 #endif
 
 #include <WinInet.h>

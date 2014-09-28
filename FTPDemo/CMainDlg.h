@@ -13,8 +13,8 @@ class CMainDlg : public CDialog
 	CButton *pExitButton = nullptr;
 
 	CEdit *pEditBox = nullptr;
-
-	CListCtrl *pListBox = nullptr;
+	
+	CStyledListCtrl *pListBox = nullptr;
 
 	FTPWorker *ftp = nullptr;
 

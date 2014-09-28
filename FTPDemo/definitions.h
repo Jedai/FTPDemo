@@ -12,3 +12,12 @@
 #define		IDC_EXIT			1204
 
 #define		IDC_LIST1			1205
+
+
+// list styled
+#define		LIS_BOLD			2000
+
+
+// macro
+
+#define		COUNTOFWCHAR(s)		(sizeof(s)/sizeof(wchar_t))

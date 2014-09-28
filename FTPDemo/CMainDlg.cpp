@@ -39,7 +39,7 @@ BOOL CMainDlg::OnInitDialog()
 
 	pEditBox = (CEdit*)GetDlgItem(IDC_EDIT1);
 
-	pListBox = new CListCtrl();
+	pListBox = new CStyledListCtrl();
 
 	RECT rect;
 	rect.left = 30;
@@ -79,8 +79,8 @@ void CMainDlg::OnConnectButtonClick()
 	if (ftp && !ftp->IsConnected()) 
 	{
 		wchar_t wszFTP[64] = L"node0.net2ftp.ru";                  
-		wchar_t *login = L"IL.job@yandex.ru"; 
-		wchar_t *pass = L"af856f9c5ba5";      
+		wchar_t login[64] = L"IL.job@yandex.ru"; 
+		wchar_t pass[64] = L"af856f9c5ba5";      
 
 		//pEdit->GetWindowTextW(wszFTP, 63);
 
@@ -105,7 +105,7 @@ void CMainDlg::OnRefreshButtonClick()
 	bool bFirst = true;
 
 	static int index = 0;
-
+	
 	if (ftp && ftp->IsConnected())
 	{		
 		pListBox->DeleteAllItems();
@@ -140,7 +140,7 @@ void CMainDlg::OnUpdateButtonClick()
 	{
 		int index = pListBox->GetSelectionMark();
 
-		wcscpy_s(wszRemoteFile, sizeof(wszRemoteFile)-1, pListBox->GetItemText(index, 0));
+		wcscpy_s(wszRemoteFile, COUNTOFWCHAR(wszRemoteFile) - 1, pListBox->GetItemText(index, 0));
 
 		ftp->UpdateFile(wszRemoteFile, wszRemoteFile);
 	}
@@ -155,7 +155,7 @@ void CMainDlg::OnOpenButtonClick()
 	{
 		int index = pListBox->GetSelectionMark();
 
-		wcscpy_s(wszRemoteFile, sizeof(wszRemoteFile)-1, pListBox->GetItemText(index, 0));
+		wcscpy_s(wszRemoteFile, COUNTOFWCHAR(wszRemoteFile) - 1, pListBox->GetItemText(index, 0));
 
 		ftp->OpenFile(wszRemoteFile, wszRemoteFile);
 
