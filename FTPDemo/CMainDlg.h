@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "stdafx.h"
+#include "Directory_watcher.h"
 
 class FTPWorker;
 class CStyledListCtrl;
@@ -16,6 +16,10 @@ class CMainDlg : public CDialog
 	CEdit *pEditBox = nullptr;
 	
 	CStyledListCtrl *pListBox = nullptr;
+
+	Watcher_str struct_for_watcher;
+	
+	HANDLE hNotificationThread = 0;
 
 	FTPWorker *ftp = nullptr;
 	

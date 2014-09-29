@@ -87,6 +87,7 @@
     <ClInclude Include="CStyledListCtrl.h" />
     <ClInclude Include="data.h" />
     <ClInclude Include="definitions.h" />
+    <ClInclude Include="Directory_watcher.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -94,7 +95,8 @@
     <ClCompile Include="CFTPWorker.cpp" />
     <ClCompile Include="CMainDlg.cpp" />
     <ClCompile Include="CStyledListCtrl.cpp" />
-  </ItemGroup>
+    <ClCompile Include="Directory_watcher.cpp" />
+    </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
