@@ -1,3 +1,4 @@
+
 #pragma once
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -7,7 +8,8 @@
 
 #include <afxwin.h>
 
-
+#include <map>
+#include <vector>
 #ifndef RC_INVOKED
 #include <afxlistctrl.h>
 //#include <afxcmn.h> 
@@ -17,9 +19,6 @@
 #pragma comment(lib,"wininet.lib")
 
 
-#include <map>
-
 #include "definitions.h"
 
 
-void CheckDirectoryChanges(LPVOID);

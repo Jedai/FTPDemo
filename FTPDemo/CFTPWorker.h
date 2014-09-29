@@ -8,12 +8,16 @@ class FTPWorker
 	wchar_t wszPassword[20];
 	wchar_t wszFileName[128];
 
-	DWORD dwErrorCode = 0;
+	wchar_t Current_path_for_files[256];
 
-	HINTERNET hInetConnection = 0;
-	HINTERNET hFTPConnection = 0;
+	DWORD dwErrorCode ;
 
-	bool bConnected = false;
+	HINTERNET hInetConnection;
+	HINTERNET hFTPConnection ;
+	bool Download_file;
+
+	bool bConnected;
+
 
 public:
 
@@ -28,4 +32,6 @@ public:
 	bool EnumerateFiles(bool);
 	bool OpenFile(wchar_t*, wchar_t*);
 	bool UpdateFile(wchar_t*, wchar_t*);
+	bool GetDownloadState();
+	bool SetDownloadState(bool Download_state);
 };

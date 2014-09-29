@@ -1,8 +1,10 @@
 #include "CFTPDemo.h"
 #include "CMainDlg.h"
+#include "Directory_watcher.h"
 
 CFTPDemo::CFTPDemo()
 {
+
 }
 
 

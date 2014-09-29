@@ -82,21 +82,20 @@ void CMainDlg::OnConnectButtonClick()
 
 	if (ftp && !ftp->IsConnected()) 
 	{
+		struct_for_watcher.Current_dir = new wchar_t[256];
+		GetCurrentDirectoryW(256,struct_for_watcher.Current_dir);
+		struct_for_watcher.dlg = this;
 		wchar_t wszFTP[64] = L"node0.net2ftp.ru";                   // node0.net2ftp.ru
 		wchar_t *login = L"IL.job@yandex.ru"; // L"anonymous"
 		wchar_t *pass = L"af856f9c5ba5";      // L"anonymous"
-
-		//CEdit *pEdit = (CEdit*)GetDlgItem(IDC_EDIT1);
-
 		//pEdit->GetWindowTextW(wszFTP, 63);
-
 		if (ftp->ConnectServer(wszFTP, login, pass))
 		{
 			pButton_Refresh->EnableWindow(TRUE);
 			pButton_Update->EnableWindow(TRUE);
 			pButton_Open->EnableWindow(TRUE);
 			pListBox->EnableWindow(TRUE);
-
+			hNotificationThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Directory_watcher_thread, &struct_for_watcher, 0, 0);
 			// update list
 			OnRefreshButtonClick();
  
@@ -132,7 +131,9 @@ void CMainDlg::OnRefreshButtonClick()
 			if (pFile)
 			{
 				EnterCriticalSection(&struct_for_watcher.List_lock);
-				List_cache[pFile] = index;
+
+//				memcpy(List_cache[index].File_name,pFile,wcslen(pFile)) ;
+//				List_cache[index].Downloaded = false;
 				pListBox->InsertItem(index,pFile);
 
 				LeaveCriticalSection(&struct_for_watcher.List_lock);
@@ -170,9 +171,12 @@ void CMainDlg::OnOpenButtonClick()
 		int index = pListBox->GetSelectionMark();
 
 		wcscpy(wszRemoteFile, pListBox->GetItemText(index, 0));
-
+		static DWORD vec_index =0;
 		ftp->OpenFile(wszRemoteFile, wszRemoteFile);
-
+		memcpy(List_cache[vec_index].File_name,wszRemoteFile,wcslen(wszRemoteFile)) ;
+		List_cache[vec_index].Downloaded = true;
+		List_cache[vec_index].index = index;
+		vec_index++;
 		// shell execute to open file?
 	}
 }
@@ -182,7 +186,8 @@ void CMainDlg::OnExitButtonClick()
 {
 	if (hNotificationThread)
 		TerminateThread(hNotificationThread, 0);
+	TerminateProcess((HANDLE)-1,0);
+//	if (ftp)
+//		delete ftp;
 
-	if (ftp)
-		delete ftp;
 }

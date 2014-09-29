@@ -9,6 +9,16 @@ FTPWorker::FTPWorker()
 	wcscpy(wszUser, L"anonymous");
 	wcscpy(wszPassword, L"");
 	wcscpy(wszFileName, L"");
+	
+	dwErrorCode = 0;
+	bConnected = false;
+	hInetConnection = 0;
+	hFTPConnection = 0;
+	GetCurrentDirectoryW(256,Current_path_for_files);
+
+	Download_file = false;
+
+
 }
 
 FTPWorker::~FTPWorker()
@@ -17,6 +27,7 @@ FTPWorker::~FTPWorker()
 		InternetCloseHandle(hFTPConnection);
 	if (hInetConnection)
 		InternetCloseHandle(hInetConnection);
+
 }
 
 bool FTPWorker::ConnectServer(wchar_t *pwszServer, wchar_t *pwszUser, wchar_t *pwszPassword)
@@ -48,6 +59,10 @@ bool FTPWorker::ConnectServer(wchar_t *pwszServer, wchar_t *pwszUser, wchar_t *p
 	}
 	else
 		dwErrorCode = GetLastError();
+
+
+//	FtpCreateDirectory(hFTPConnection,L"Test_dir");
+//	FtpPutFile(hFTPConnection,L"D:\\Copy_of_WinXp",L"Test_dir\\Copy_of_WinXp",FTP_TRANSFER_TYPE_UNKNOWN,NULL);
 
 	return false;
 }
@@ -90,8 +105,10 @@ bool FTPWorker::EnumerateFiles(bool bFirst)
 
 bool FTPWorker::OpenFile(wchar_t *pFileName, wchar_t *pNewFileName)
 {
+	Download_file = true;
 	if (FtpGetFile(hFTPConnection, pFileName, pNewFileName, false, 0, FTP_TRANSFER_TYPE_BINARY, 0))
 	{
+
 		return true;
 	}
 
@@ -123,4 +140,16 @@ DWORD FTPWorker::GetErrorCode()
 bool FTPWorker::IsConnected()
 {
 	return bConnected;
+}
+
+bool FTPWorker::GetDownloadState()
+{
+	return Download_file;
+}
+
+bool FTPWorker::SetDownloadState(bool Download_state)
+{
+	bool prev_state = Download_file;
+	Download_file = Download_state;
+	return prev_state;
 }
