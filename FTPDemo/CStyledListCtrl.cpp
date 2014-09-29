@@ -48,7 +48,7 @@ void CStyledListCtrl::OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult)
 
 	case CDDS_ITEMPREPAINT:
 		
-		if (pItems[lplvcd->nmcd.dwItemSpec].dwItemStyle & LIS_BOLD /*&& lplvcd->iSubItem == 0*/)
+		if (pItems.size() && pItems[lplvcd->nmcd.dwItemSpec].dwItemStyle & LIS_BOLD /*&& lplvcd->iSubItem == 0*/)
 		{
 			SelectObject(lplvcd->nmcd.hdc, txtFont.GetSafeHandle());
 			//lplvcd->clrText = RGB(255, 0, 0);

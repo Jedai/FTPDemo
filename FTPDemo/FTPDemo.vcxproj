@@ -85,6 +85,7 @@
     <ClInclude Include="CFTPWorker.h" />
     <ClInclude Include="CMainDlg.h" />
     <ClInclude Include="CStyledListCtrl.h" />
+    <ClInclude Include="data.h" />
     <ClInclude Include="definitions.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

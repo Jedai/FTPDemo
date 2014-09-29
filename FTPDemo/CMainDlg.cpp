@@ -84,9 +84,7 @@ void CMainDlg::OnConnectButtonClick()
 		wchar_t wszFTP[64] = L"node0.net2ftp.ru";                  
 		wchar_t login[64] = L"IL.job@yandex.ru"; 
 		wchar_t pass[64] = L"af856f9c5ba5";      
-
-		//pEdit->GetWindowTextW(wszFTP, 63);
-
+		
 		if (ftp->ConnectServer(wszFTP, login, pass))
 		{
 			// start notification thread here
@@ -118,26 +116,23 @@ void CMainDlg::OnRefreshButtonClick()
 		while (ftp->EnumerateFiles(bFirst))
 		{
 			bFirst = false;
-
 			wchar_t *pFile = ftp->GetCurrentFileName();
 
 			if (pFile)
 			{
 				pListBox->InsertItem(index,pFile);
-				// get file info
-				// pListBox->InsertItemText(index,1,wszFileDate);
 
 				ITEM_DATA iData = { 0 };
-				wcscpy_s(iData.fInfo.wszFileName, COUNTOFWCHAR(FILE_INFO::wszFileName) / 2 - 1, pFile);
+				wcscpy_s(iData.fInfo.wszFileName, COUNTOFWCHAR(iData.fInfo.wszFileName) / 2 - 1, pFile);
 
 				if ((pFile = ftp->GetCurrentFileDate()))
 				{
-					wcscpy_s(iData.fInfo.wszFileDate, COUNTOFWCHAR(FILE_INFO::wszFileDate) / 2 - 1, pFile);
+					wcscpy_s(iData.fInfo.wszFileDate, COUNTOFWCHAR(iData.fInfo.wszFileDate) / 2 - 1, pFile);
 					pListBox->SetItemText(index, 2, pFile);
 				}
 				if ((pFile = ftp->GetCurrentFileSize()))
 				{
-					wcscpy_s(iData.fInfo.wszFileSize, COUNTOFWCHAR(FILE_INFO::wszFileSize) / 2 - 1, pFile);
+					wcscpy_s(iData.fInfo.wszFileSize, COUNTOFWCHAR(iData.fInfo.wszFileSize) / 2 - 1, pFile);
 					pListBox->SetItemText(index, 1, pFile);
 				}
 

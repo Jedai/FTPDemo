@@ -1,6 +1,6 @@
 #pragma once
 #include "stdafx.h"
-
+#include "data.h"
 
 class CStyledListCtrl : public CListCtrl
 {

@@ -83,9 +83,7 @@ bool FTPWorker::EnumerateFiles(bool bFirst)
 				dwErrorCode = GetLastError();
 		}
 	}
-	DWORD dw = sizeof(wszFileName) / 2;
-	InternetGetLastResponseInfo(&dwErrorCode, wszFileName, &dw);
-
+	
 	return bResult;
 }
 
@@ -100,12 +98,14 @@ bool FTPWorker::GetFileInfo(wchar_t *wszFile)
 	LONG size = 0;
 
 	wcscpy(wszFileName, wszFile);
+	wcscpy(wszFileDate, L"");
+	wcscpy(wszFileSize, L"");
 
 	HINTERNET hFile = FtpOpenFile(hFTPConnection, wszFile, GENERIC_READ, FTP_TRANSFER_TYPE_BINARY, 0);
 	if (hFile)
 	{
 		dwSizeLow = FtpGetFileSize(hFile, &dwSizeHigh);
-		size = (dwSizeHigh << 32) | dwSizeLow;
+		size = (dwSizeHigh << 16) | dwSizeLow;
 		_i64tow(size, wszFileSize, 10);
 
 		wchar_t wszCommand[256] = L"MDTM ";
@@ -113,9 +113,10 @@ bool FTPWorker::GetFileInfo(wchar_t *wszFile)
 		if (FtpCommand(hFTPConnection, false, FTP_TRANSFER_TYPE_BINARY, wszCommand, 0, 0))
 			wcscpy(wszFileDate, wszCommand);
 
-		return true;
+		InternetCloseHandle(hFile);
+		//return true;
 	}
-	return false;
+	return true;
 }
 
 
@@ -145,6 +146,15 @@ wchar_t* FTPWorker::GetCurrentFileName()
 	return wszFileName;
 }
 
+wchar_t* FTPWorker::GetCurrentFileDate()
+{
+	return wszFileDate;
+}
+
+wchar_t* FTPWorker::GetCurrentFileSize()
+{
+	return wszFileSize;
+}
 
 DWORD FTPWorker::GetErrorCode()
 {
