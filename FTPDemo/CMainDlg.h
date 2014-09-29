@@ -1,8 +1,9 @@
 #pragma once
 
-#include "stdafx.h"
+//#include "stdafx.h"
 
 class FTPWorker;
+class CStyledListCtrl;
 
 class CMainDlg : public CDialog
 {
@@ -17,9 +18,7 @@ class CMainDlg : public CDialog
 	CStyledListCtrl *pListBox = nullptr;
 
 	FTPWorker *ftp = nullptr;
-
-	HANDLE hNotificationThread = 0;
-
+	
 public:
 
 	enum { IDD = IDD_MAIN_DLG  };
@@ -28,6 +27,8 @@ public:
 	~CMainDlg();
 
 	virtual BOOL OnInitDialog();
+	
+	CStyledListCtrl* GetListCtrl();
 
 	afx_msg void OnConnectButtonClick();
 	afx_msg void OnRefreshButtonClick();

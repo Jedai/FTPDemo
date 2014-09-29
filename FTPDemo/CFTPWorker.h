@@ -6,7 +6,10 @@ class FTPWorker
 	wchar_t wszServer[128];
 	wchar_t wszUser[20];
 	wchar_t wszPassword[20];
+
 	wchar_t wszFileName[128];
+	wchar_t wszFileDate[32];
+	wchar_t wszFileSize[32];
 
 	DWORD dwErrorCode = 0;
 
@@ -21,6 +24,10 @@ public:
 	~FTPWorker();
 
 	wchar_t* GetCurrentFileName();
+	wchar_t* GetCurrentFileSize();
+	wchar_t* GetCurrentFileDate();
+
+	bool GetFileInfo(wchar_t*);
 	DWORD GetErrorCode();
 	bool IsConnected();
 
@@ -29,3 +36,4 @@ public:
 	bool OpenFile(wchar_t*, wchar_t*);
 	bool UpdateFile(wchar_t*, wchar_t*);
 };
+

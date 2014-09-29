@@ -64,8 +64,8 @@ bool FTPWorker::EnumerateFiles(bool bFirst)
 		hFindHandle = FtpFindFirstFile(hFTPConnection, nullptr, &findData, INTERNET_FLAG_NEED_FILE, 0);
 		if (hFindHandle)
 		{
-			wcscpy_s(wszFileName, COUNTOFWCHAR(wszFileName) - 1, findData.cFileName);
-			bResult = true;
+			//wcscpy(wszFileName, findData.cFileName);
+			bResult = GetFileInfo(findData.cFileName);
 		}
 		else
 			dwErrorCode = GetLastError();
@@ -76,15 +76,46 @@ bool FTPWorker::EnumerateFiles(bool bFirst)
 		{
 			if (InternetFindNextFile(hFindHandle, &findData))
 			{
-				wcscpy_s(wszFileName, COUNTOFWCHAR(wszFileName) - 1, findData.cFileName);
-				bResult = true;
+				//wcscpy(wszFileName, findData.cFileName);
+				bResult = GetFileInfo(findData.cFileName);
 			}
 			else
 				dwErrorCode = GetLastError();
 		}
 	}
+	DWORD dw = sizeof(wszFileName) / 2;
+	InternetGetLastResponseInfo(&dwErrorCode, wszFileName, &dw);
 
 	return bResult;
+}
+
+
+
+
+
+bool FTPWorker::GetFileInfo(wchar_t *wszFile)
+{
+	DWORD dwSizeLow = 0;
+	DWORD dwSizeHigh = 0;
+	LONG size = 0;
+
+	wcscpy(wszFileName, wszFile);
+
+	HINTERNET hFile = FtpOpenFile(hFTPConnection, wszFile, GENERIC_READ, FTP_TRANSFER_TYPE_BINARY, 0);
+	if (hFile)
+	{
+		dwSizeLow = FtpGetFileSize(hFile, &dwSizeHigh);
+		size = (dwSizeHigh << 32) | dwSizeLow;
+		_i64tow(size, wszFileSize, 10);
+
+		wchar_t wszCommand[256] = L"MDTM ";
+		wcscat(wszCommand, wszFileName);
+		if (FtpCommand(hFTPConnection, false, FTP_TRANSFER_TYPE_BINARY, wszCommand, 0, 0))
+			wcscpy(wszFileDate, wszCommand);
+
+		return true;
+	}
+	return false;
 }
 
 

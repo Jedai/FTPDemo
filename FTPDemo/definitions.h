@@ -15,7 +15,7 @@
 
 
 // list styled
-#define		LIS_BOLD			2000
+#define		LIS_BOLD			0x00000001
 
 
 // macro

@@ -93,7 +93,6 @@
     <ClCompile Include="CFTPWorker.cpp" />
     <ClCompile Include="CMainDlg.cpp" />
     <ClCompile Include="CStyledListCtrl.cpp" />
-    <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

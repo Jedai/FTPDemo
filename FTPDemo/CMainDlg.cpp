@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CMainDlg.h"
 #include "CFTPWorker.h"
 
@@ -15,6 +16,8 @@ CMainDlg::CMainDlg() : CDialog(CMainDlg::IDD)
 
 CMainDlg::~CMainDlg()
 {
+	// terminate notification thread here
+
 	if (pListBox)
 		delete pListBox;
 	if (ftp)
@@ -86,8 +89,7 @@ void CMainDlg::OnConnectButtonClick()
 
 		if (ftp->ConnectServer(wszFTP, login, pass))
 		{
-			// start notification thread
-			hNotificationThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)CheckDirectoryChanges, 0, 0, 0);
+			// start notification thread here
 
 			// update list
 			OnRefreshButtonClick();
@@ -95,7 +97,10 @@ void CMainDlg::OnConnectButtonClick()
 			pRefreshButton->EnableWindow(true);
 		}
 		else
+		{
 			delete ftp;
+			ftp = nullptr;
+		}
 	}
 }
 
@@ -119,6 +124,25 @@ void CMainDlg::OnRefreshButtonClick()
 			if (pFile)
 			{
 				pListBox->InsertItem(index,pFile);
+				// get file info
+				// pListBox->InsertItemText(index,1,wszFileDate);
+
+				ITEM_DATA iData = { 0 };
+				wcscpy_s(iData.fInfo.wszFileName, COUNTOFWCHAR(FILE_INFO::wszFileName) / 2 - 1, pFile);
+
+				if ((pFile = ftp->GetCurrentFileDate()))
+				{
+					wcscpy_s(iData.fInfo.wszFileDate, COUNTOFWCHAR(FILE_INFO::wszFileDate) / 2 - 1, pFile);
+					pListBox->SetItemText(index, 2, pFile);
+				}
+				if ((pFile = ftp->GetCurrentFileSize()))
+				{
+					wcscpy_s(iData.fInfo.wszFileSize, COUNTOFWCHAR(FILE_INFO::wszFileSize) / 2 - 1, pFile);
+					pListBox->SetItemText(index, 1, pFile);
+				}
+
+				pListBox->SetItemData(index, &iData);
+								
 				index++;
 
 				if (!pOpenButton->IsWindowEnabled())
@@ -157,21 +181,36 @@ void CMainDlg::OnOpenButtonClick()
 
 		wcscpy_s(wszRemoteFile, COUNTOFWCHAR(wszRemoteFile) - 1, pListBox->GetItemText(index, 0));
 
-		ftp->OpenFile(wszRemoteFile, wszRemoteFile);
+		if (ftp->OpenFile(wszRemoteFile, wszRemoteFile))
+		{
+			// mark it as "received"
+			pListBox->SetItemReceived(index, true);
+			pListBox->SetItemStyle(index, LIS_BOLD);
 
-		// shell execute to open file?
-		ShellExecute(NULL, L"open", wszRemoteFile, NULL, NULL, SW_SHOW);
+			// shell execute to open file?
+			ShellExecute(NULL, L"open", wszRemoteFile, NULL, NULL, SW_SHOW);
+		}
 	}
 }
 
 
 void CMainDlg::OnExitButtonClick()
 {
-	if (hNotificationThread)
-		TerminateThread(hNotificationThread, 0);
-
-	if (ftp)
-		delete ftp;
-
 	EndDialog(0);
+}
+
+
+/*void CMainDlg::SetFileInfo(DWORD index,FILE_INFO *pFileInfo)
+{
+	if (pFileInfo->wszFileName && pFileList.size() > index)
+	{
+		pFileList[index].bDownloaded = pFileInfo->bDownloaded;
+		wcscpy_s(pFileList[index].wszFileName, COUNTOFWCHAR(FILE_INFO::wszFileName) / 2 - 1, pFileInfo->wszFileName);
+	}
+}*/
+
+
+CStyledListCtrl* CMainDlg::GetListCtrl()
+{
+	return pListBox;
 }
