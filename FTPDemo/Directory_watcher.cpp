@@ -7,7 +7,6 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 {
 
 	Watcher_str* watch_str = (Watcher_str*)lpParameter;
-	HANDLE chng;
 	bool bWait = true;
 
 	HANDLE watch_dir = CreateFileW(watch_str->Current_dir, FILE_LIST_DIRECTORY, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS,NULL );
@@ -43,7 +42,7 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 
 				EnterCriticalSection(&watch_str->List_lock);
 
-				index_count = ((CMainDlg*)watch_str->dlg)->pListBox->GetItemCount();	
+				index_count = ((CMainDlg*)watch_str->dlg)->GetListCtrl()->GetItemCount();	
 				it = list_cache->find(buf_file_name);
 				if (it != list_cache->end())
 				{
@@ -52,7 +51,7 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 					{
 						buf_file_name[file_length/sizeof(wchar_t)] = '*';
 						buf_file_name[file_length/sizeof(wchar_t) + 1*sizeof(wchar_t)] = 0;
-						((CMainDlg*)watch_str->dlg)->pListBox->InsertItem(index_in_map,buf_file_name);
+						((CMainDlg*)watch_str->dlg)->GetListCtrl()->InsertItem(index_in_map, buf_file_name); // remove before ????
 					}
 				}
 				else

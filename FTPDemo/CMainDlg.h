@@ -24,6 +24,7 @@ class CMainDlg : public CDialog
 	FTPWorker *ftp = nullptr;
 	
 public:
+	std::map<CString, DWORD> List_cache;
 
 	enum { IDD = IDD_MAIN_DLG  };
 
