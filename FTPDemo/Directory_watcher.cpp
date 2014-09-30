@@ -25,7 +25,8 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 			//	std::map<CString,DWORD>::iterator it;;
 
 ///////////////////////////
-	std::vector<ITEM_DATA> file_names_cache; 
+	std::vector<ITEM_DATA>* file_names_cache; 
+	std::vector<ITEM_DATA>::iterator it; 
 ////////////////////////
 	wchar_t* buf_file_name;
 
@@ -44,12 +45,12 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 				memcpy(buf_file_name,current_file_change_inf->FileName,file_length);
 				buf_file_name[file_length/sizeof(wchar_t)] = 0;
 
-				EnterCriticalSection(&watch_str->List_lock);
+
 
 		//			list_cache = &((CMainDlg*)watch_str->dlg)->List_cache;
 
 						/////////////////NEW CODE///////////////
-				file_names_cache = ((CMainDlg*)watch_str->dlg)->List_cache;
+				file_names_cache = &((CMainDlg*)watch_str->dlg)->List_cache;
 //////////////////////////
 				index_count = ((CMainDlg*)watch_str->dlg)->pListBox->GetItemCount();	
 			//			it = list_cache->find(buf_file_name);
@@ -58,66 +59,59 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 					{
 					case FILE_ACTION_REMOVED:
 /////////////////NEW CODE///////////////
-				for(DWORD i =0; i < file_names_cache.size();i++)
+			//	for(DWORD i =0; i < file_names_cache->size();i++)
+				for(it  = file_names_cache->begin(); it != file_names_cache->end();it++)
 				{
-					if( !wcscmp(file_names_cache[i].File_name,buf_file_name) )
+					if( !wcscmp((*it).File_name,buf_file_name) )
 					{
-						 file_names_cache[i].Downloaded = false;
-						((CMainDlg*)watch_str->dlg)->pListBox->DeleteItem(file_names_cache[i].index);
-						((CMainDlg*)watch_str->dlg)->pListBox->InsertItem(file_names_cache[i].index,buf_file_name);	//Change font
+						// need lock
+						 (*it).Downloaded = FILE_DOWNLOADED_DELETED_FLAG;
+						((CMainDlg*)watch_str->dlg)->pListBox->DeleteItem((*it).index);
+						((CMainDlg*)watch_str->dlg)->pListBox->InsertItem((*it).index,buf_file_name);	//Change font
 					}
 
 				}
 
-							//	((CMainDlg*)watch_str->dlg)->pListBox->DeleteItem(index_in_map);
-
-								//((CMainDlg*)watch_str->dlg)->pListBox->InsertItem(index_in_map,buf_file_name);
 						break;
 					case FILE_ACTION_MODIFIED:
-
+					case	FILE_ACTION_ADDED:
 						/////////////////NEW CODE///////////////
 ///////////////////////////
-//				for(DWORD i =0; i < file_names_cache->size();i++)
-//				{
-//					if(  list_cache[i]->Downloaded )
-//					{
-//						((CMainDlg*)watch_str->dlg)->pListBox->DeleteItem(list_cache[i]->index);
-//						((CMainDlg*)watch_str->dlg)->pListBox->InsertItem(list_cache[i]->index,buf_file_name);	Change font
-//					}
-//					else
-//					{
-//						if( !wcscmp(list_cache[i]->File_name,buf_file_name) )
-//						{
-//							buf_file_name[file_length/sizeof(wchar_t)] = L'*';
-//							buf_file_name[file_length/sizeof(wchar_t) + 1] = 0;
-//							((CMainDlg*)watch_str->dlg)->pListBox->DeleteItem(list_cache[i]->index);
-//							((CMainDlg*)watch_str->dlg)->pListBox->InsertItem(list_cache[i]->index,buf_file_name);
-//						}
-//					}
-//				}
+			//	for(DWORD i =0; i < file_names_cache.size();i++)
+				for(it  = file_names_cache->begin(); it != file_names_cache->end();it++)
+				{
+						if((*it).Downloaded == FILE_DOWNLOADED_DELETED_FLAG || (*it).Downloaded == FILE_DOWNLOADED_CHANGED_FLAG)
+							break;
+
+						if( !wcscmp((*it).File_name,buf_file_name) )
+						{
+							if(  (*it).Downloaded  == FILE_DOWNLOADING_FLAG && current_file_change_inf->Action  == FILE_ACTION_ADDED )
+							{
+								((CMainDlg*)watch_str->dlg)->pListBox->DeleteItem((*it).index);
+								((CMainDlg*)watch_str->dlg)->pListBox->InsertItem((*it).index,buf_file_name);	//Change font
+								// need lock
+							//	if( file_names_cache[i].Downloaded  == FILE_DOWNLOADED_FLAG )
+									 (*it).Downloaded = FILE_DOWNLOADING_FONT_CHANGED_FLAG;
+
+							}
+							else
+							{
+								if( (*it).Downloaded = FILE_DOWNLOADED_FLAG )
+								{
+									buf_file_name[file_length/sizeof(wchar_t)] = L'*';
+									buf_file_name[file_length/sizeof(wchar_t) + 1] = 0;
+									((CMainDlg*)watch_str->dlg)->pListBox->DeleteItem((*it).index);
+									((CMainDlg*)watch_str->dlg)->pListBox->InsertItem((*it).index,buf_file_name);
+									(*it).Downloaded = FILE_DOWNLOADED_CHANGED_FLAG;
+								}
+							}
+						}
+
+				}
 ////////////////////////
 
-
-
-
-
-							//						if( !((CMainDlg*)watch_str->dlg)->ftp->GetDownloadState() )
-							//						{
-							//							buf_file_name[file_length/sizeof(wchar_t)] = L'*';
-							//							buf_file_name[file_length/sizeof(wchar_t) + 1] = 0;
-							//							((CMainDlg*)watch_str->dlg)->pListBox->DeleteItem(index_in_map);
-							//							((CMainDlg*)watch_str->dlg)->pListBox->InsertItem(index_in_map,buf_file_name);
-							//						}
-							//						else
-							//						{
-							//							((CMainDlg*)watch_str->dlg)->pListBox->DeleteItem(index_in_map);
-							//							((CMainDlg*)watch_str->dlg)->pListBox->SetFont(&font_list,0);
-							//							((CMainDlg*)watch_str->dlg)->pListBox->InsertItem(index_in_map,buf_file_name);
-							//							((CMainDlg*)watch_str->dlg)->ftp->SetDownloadState(false);
-							////						}
 						break;
 					}
-				LeaveCriticalSection(&watch_str->List_lock);
 				offset_cur = current_file_change_inf->NextEntryOffset;
 				current_file_change_inf = (FILE_NOTIFY_INFORMATION*)((DWORD)current_file_change_inf + (DWORD)current_file_change_inf->NextEntryOffset);
 				delete buf_file_name;

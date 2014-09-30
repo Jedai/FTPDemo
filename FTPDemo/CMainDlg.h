@@ -22,6 +22,7 @@ public:
 	HANDLE hNotificationThread;
 	Watcher_str struct_for_watcher;
 	FTPWorker *ftp;
+	HANDLE h_Event_for_Splash_screen;
 
 public:
 

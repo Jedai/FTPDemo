@@ -130,13 +130,12 @@ void CMainDlg::OnRefreshButtonClick()
 
 			if (pFile)
 			{
-				EnterCriticalSection(&struct_for_watcher.List_lock);
 
 //				memcpy(List_cache[index].File_name,pFile,wcslen(pFile)) ;
 //				List_cache[index].Downloaded = false;
 				pListBox->InsertItem(index,pFile);
 
-				LeaveCriticalSection(&struct_for_watcher.List_lock);
+
 				index++;
 			}
 
@@ -160,22 +159,27 @@ void CMainDlg::OnUpdateButtonClick()
 		ftp->UpdateFile(wszRemoteFile, wszRemoteFile);
 	}
 }
-
+	static DWORD vec_index =0;
 void CMainDlg::OnOpenButtonClick()
 {
 	wchar_t wszRemoteFile[128];
 	wchar_t wszLocalFile[128];
+	ITEM_DATA data_for_cache;
 
 	if (ftp && ftp->IsConnected())
 	{
 		int index = pListBox->GetSelectionMark();
 
 		wcscpy(wszRemoteFile, pListBox->GetItemText(index, 0));
-		static DWORD vec_index =0;
+
+		memcpy(data_for_cache.File_name,wszRemoteFile,wcslen(wszRemoteFile)*sizeof(wchar_t) + 2) ;
+		data_for_cache.index = index;
+		data_for_cache.Downloaded = FILE_DOWNLOADING_FLAG;
+
+		List_cache.push_back(data_for_cache);
+
 		ftp->OpenFile(wszRemoteFile, wszRemoteFile);
-		memcpy(List_cache[vec_index].File_name,wszRemoteFile,wcslen(wszRemoteFile)) ;
-		List_cache[vec_index].Downloaded = true;
-		List_cache[vec_index].index = index;
+		List_cache[vec_index].Downloaded = FILE_DOWNLOADED_FLAG;
 		vec_index++;
 		// shell execute to open file?
 	}
