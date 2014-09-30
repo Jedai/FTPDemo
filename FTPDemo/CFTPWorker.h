@@ -18,6 +18,8 @@ class FTPWorker
 
 	bool bConnected = false;
 
+	std::vector<FILE_INFO> pFileList;
+
 public:
 
 	FTPWorker();
@@ -27,9 +29,14 @@ public:
 	wchar_t* GetCurrentFileSize();
 	wchar_t* GetCurrentFileDate();
 
-	bool GetFileInfo(wchar_t*);
+	bool FtpGetFileInfo(wchar_t*);
 	DWORD GetErrorCode();
 	bool IsConnected();
+
+	void SetFileInfo(DWORD, PFILE_INFO);
+
+	void SetItemReceived(DWORD, bool);
+	bool IsItemReceived(DWORD);
 
 	bool ConnectServer(wchar_t*, wchar_t*, wchar_t*);
 	bool EnumerateFiles(bool);

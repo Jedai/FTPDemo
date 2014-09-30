@@ -4,7 +4,7 @@
 
 typedef struct _Watcher_str
 {
-	wchar_t* Current_dir;
+	wchar_t Current_dir[256];
 	CDialog* dlg;
 	CRITICAL_SECTION List_lock;
 

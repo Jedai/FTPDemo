@@ -17,7 +17,7 @@ class CMainDlg : public CDialog
 	
 	CStyledListCtrl *pListBox = nullptr;
 
-	Watcher_str struct_for_watcher;
+	Watcher_str param;
 	
 	HANDLE hNotificationThread = 0;
 
@@ -34,6 +34,7 @@ public:
 	virtual BOOL OnInitDialog();
 	
 	CStyledListCtrl* GetListCtrl();
+	FTPWorker* GetFTPConnection();
 
 	afx_msg void OnConnectButtonClick();
 	afx_msg void OnRefreshButtonClick();

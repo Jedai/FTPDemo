@@ -17,11 +17,15 @@ CMainDlg::CMainDlg() : CDialog(CMainDlg::IDD)
 CMainDlg::~CMainDlg()
 {
 	// terminate notification thread here
+	if (hNotificationThread)
+		TerminateThread(hNotificationThread, 0);
 
 	if (pListBox)
 		delete pListBox;
 	if (ftp)
 		delete ftp;
+
+	DeleteCriticalSection(&param.List_lock);
 }
 
 BOOL CMainDlg::OnInitDialog()
@@ -68,6 +72,8 @@ BOOL CMainDlg::OnInitDialog()
 	pColumn.pszText = L"Modified";
 	pListBox->InsertColumn(2, &pColumn);
 
+	InitializeCriticalSection(&param.List_lock);
+
 	return FALSE;  
 }
 
@@ -88,6 +94,11 @@ void CMainDlg::OnConnectButtonClick()
 		if (ftp->ConnectServer(wszFTP, login, pass))
 		{
 			// start notification thread here
+			param.dlg = this;			
+			DWORD dwLen = 255;
+
+			GetCurrentDirectory(dwLen,param.Current_dir);
+			hNotificationThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Directory_watcher_thread, &param, 0, 0);
 
 			// update list
 			OnRefreshButtonClick();
@@ -122,21 +133,21 @@ void CMainDlg::OnRefreshButtonClick()
 			{
 				pListBox->InsertItem(index,pFile);
 
-				ITEM_DATA iData = { 0 };
-				wcscpy_s(iData.fInfo.wszFileName, COUNTOFWCHAR(iData.fInfo.wszFileName) / 2 - 1, pFile);
+				FILE_INFO fInfo = { 0 };
+				wcscpy_s(fInfo.wszFileName, COUNTOFWCHAR(fInfo.wszFileName) / 2 - 1, pFile);
 
 				if ((pFile = ftp->GetCurrentFileDate()))
 				{
-					wcscpy_s(iData.fInfo.wszFileDate, COUNTOFWCHAR(iData.fInfo.wszFileDate) / 2 - 1, pFile);
+					wcscpy_s(fInfo.wszFileDate, COUNTOFWCHAR(fInfo.wszFileDate) / 2 - 1, pFile);
 					pListBox->SetItemText(index, 2, pFile);
 				}
 				if ((pFile = ftp->GetCurrentFileSize()))
 				{
-					wcscpy_s(iData.fInfo.wszFileSize, COUNTOFWCHAR(iData.fInfo.wszFileSize) / 2 - 1, pFile);
+					wcscpy_s(fInfo.wszFileSize, COUNTOFWCHAR(fInfo.wszFileSize) / 2 - 1, pFile);
 					pListBox->SetItemText(index, 1, pFile);
 				}
 
-				pListBox->SetItemData(index, &iData);
+				ftp->SetFileInfo(index, &fInfo);
 								
 				index++;
 
@@ -179,7 +190,7 @@ void CMainDlg::OnOpenButtonClick()
 		if (ftp->OpenFile(wszRemoteFile, wszRemoteFile))
 		{
 			// mark it as "received"
-			pListBox->SetItemReceived(index, true);
+			ftp->SetItemReceived(index, true);
 			pListBox->SetItemStyle(index, LIS_BOLD);
 
 			// shell execute to open file?
@@ -195,17 +206,12 @@ void CMainDlg::OnExitButtonClick()
 }
 
 
-/*void CMainDlg::SetFileInfo(DWORD index,FILE_INFO *pFileInfo)
-{
-	if (pFileInfo->wszFileName && pFileList.size() > index)
-	{
-		pFileList[index].bDownloaded = pFileInfo->bDownloaded;
-		wcscpy_s(pFileList[index].wszFileName, COUNTOFWCHAR(FILE_INFO::wszFileName) / 2 - 1, pFileInfo->wszFileName);
-	}
-}*/
-
-
 CStyledListCtrl* CMainDlg::GetListCtrl()
 {
 	return pListBox;
+}
+
+FTPWorker* CMainDlg::GetFTPConnection()
+{
+	return ftp;
 }

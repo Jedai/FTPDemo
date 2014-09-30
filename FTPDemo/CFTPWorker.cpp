@@ -13,6 +13,8 @@ FTPWorker::FTPWorker()
 
 FTPWorker::~FTPWorker()
 {
+	pFileList.clear();
+
 	if (hFTPConnection)
 		InternetCloseHandle(hFTPConnection);
 	if (hInetConnection)
@@ -65,7 +67,7 @@ bool FTPWorker::EnumerateFiles(bool bFirst)
 		if (hFindHandle)
 		{
 			//wcscpy(wszFileName, findData.cFileName);
-			bResult = GetFileInfo(findData.cFileName);
+			bResult = FtpGetFileInfo(findData.cFileName);
 		}
 		else
 			dwErrorCode = GetLastError();
@@ -77,7 +79,7 @@ bool FTPWorker::EnumerateFiles(bool bFirst)
 			if (InternetFindNextFile(hFindHandle, &findData))
 			{
 				//wcscpy(wszFileName, findData.cFileName);
-				bResult = GetFileInfo(findData.cFileName);
+				bResult = FtpGetFileInfo(findData.cFileName);
 			}
 			else
 				dwErrorCode = GetLastError();
@@ -88,10 +90,16 @@ bool FTPWorker::EnumerateFiles(bool bFirst)
 }
 
 
+void FTPWorker::SetFileInfo(DWORD index, PFILE_INFO pInfo)
+{
+	if (index < pFileList.size())
+	{
+		pFileList[index] = *pInfo;
+	}
+}
 
 
-
-bool FTPWorker::GetFileInfo(wchar_t *wszFile)
+bool FTPWorker::FtpGetFileInfo(wchar_t *wszFile)
 {
 	DWORD dwSizeLow = 0;
 	DWORD dwSizeHigh = 0;
@@ -164,4 +172,18 @@ DWORD FTPWorker::GetErrorCode()
 bool FTPWorker::IsConnected()
 {
 	return bConnected;
+}
+
+void FTPWorker::SetItemReceived(DWORD nItem, bool bReceived)
+{
+	if (nItem < pFileList.size())
+		pFileList[nItem].bReceived = bReceived;
+}
+
+bool FTPWorker::IsItemReceived(DWORD nItem)
+{
+	if (nItem < pFileList.size())
+		return pFileList[nItem].bReceived;
+
+	return false;
 }

@@ -21,12 +21,14 @@ void CStyledListCtrl::SetItemStyle(DWORD dwItem, DWORD dwStyle)
 		pItems[dwItem].dwItemStyle = dwStyle;
 }
 
-/*int CStyledListCtrl::InsertItem(int nItem, LPWSTR pwszItemText)
+int CStyledListCtrl::InsertItem(int nItem, LPWSTR pwszItemText)
 {
-	//pItems[nItem] = { 0 }; // default style 0
+	ITEM_DATA iData = { 0 };
+
+	pItems.push_back(iData); // default style 0
 
 	return CListCtrl::InsertItem(nItem, pwszItemText);
-}*/
+}
 
 void CStyledListCtrl::SetItemData(DWORD index, ITEM_DATA *pData)
 {
@@ -48,7 +50,7 @@ void CStyledListCtrl::OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult)
 
 	case CDDS_ITEMPREPAINT:
 		
-		if (pItems.size() && pItems[lplvcd->nmcd.dwItemSpec].dwItemStyle & LIS_BOLD /*&& lplvcd->iSubItem == 0*/)
+		if (pItems.size() && pItems[lplvcd->nmcd.dwItemSpec].dwItemStyle & LIS_BOLD)
 		{
 			SelectObject(lplvcd->nmcd.hdc, txtFont.GetSafeHandle());
 			//lplvcd->clrText = RGB(255, 0, 0);
@@ -72,16 +74,4 @@ BOOL CStyledListCtrl::DeleteAllItems()
 	return CListCtrl::DeleteAllItems();
 }
 
-void CStyledListCtrl::SetItemReceived(DWORD nItem,bool bReceived)
-{
-	if (nItem < pItems.size())
-		pItems[nItem].fInfo.bReceived = bReceived;
-}
 
-bool CStyledListCtrl::IsItemReceived(DWORD nItem)
-{
-	if (nItem < pItems.size())
-		return pItems[nItem].fInfo.bReceived;
-
-	return false;
-}

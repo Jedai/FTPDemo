@@ -14,6 +14,5 @@ typedef struct _FILE_INFO
 
 typedef struct _ITEM_DATA
 {
-	FILE_INFO fInfo;
 	DWORD dwItemStyle;
 }ITEM_DATA, *PITEM_DATA;
