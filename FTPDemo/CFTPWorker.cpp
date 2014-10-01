@@ -21,7 +21,17 @@ FTPWorker::~FTPWorker()
 		InternetCloseHandle(hInetConnection);
 }
 
-bool FTPWorker::ConnectServer(wchar_t *pwszServer, wchar_t *pwszUser, wchar_t *pwszPassword)
+BOOL FTPWorker::ReconnectServer()
+{
+	if (hFTPConnection)
+		InternetCloseHandle(hFTPConnection);
+	if (hInetConnection)
+		InternetCloseHandle(hInetConnection);
+
+	return ConnectServer(wszServer, wszUser, wszPassword);
+}
+
+BOOL FTPWorker::ConnectServer(wchar_t *pwszServer, wchar_t *pwszUser, wchar_t *pwszPassword)
 {
 	if (pwszServer)
 		wcscpy_s(wszServer, COUNTOFWCHAR(wszServer) - 1, pwszServer);
@@ -35,12 +45,19 @@ bool FTPWorker::ConnectServer(wchar_t *pwszServer, wchar_t *pwszUser, wchar_t *p
 
 	if (hInetConnection)
 	{
-		hFTPConnection = InternetConnect(hInetConnection, wszServer, INTERNET_DEFAULT_FTP_PORT, wszUser, wszPassword, INTERNET_SERVICE_FTP, INTERNET_FLAG_EXISTING_CONNECT, NULL);
+		hFTPConnection = InternetConnect(hInetConnection, wszServer, INTERNET_DEFAULT_FTP_PORT, wszUser, wszPassword, INTERNET_SERVICE_FTP, INTERNET_FLAG_EXISTING_CONNECT /*| INTERNET_FLAG_PASSIVE*/, NULL);
 
 		if (hFTPConnection)
 		{
-			bConnected = true;
-			return true;
+			DWORD dwTimeout = 5000;
+
+			InternetSetOption(hFTPConnection, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, &dwTimeout, sizeof(DWORD));
+			InternetSetOption(hFTPConnection, INTERNET_OPTION_DATA_SEND_TIMEOUT, &dwTimeout, sizeof(DWORD));
+			InternetSetOption(hFTPConnection, INTERNET_OPTION_RECEIVE_TIMEOUT, &dwTimeout, sizeof(DWORD));
+			InternetSetOption(hFTPConnection, INTERNET_OPTION_SEND_TIMEOUT, &dwTimeout, sizeof(DWORD));
+
+			bConnected = TRUE;
+			return TRUE;
 		}
 		else
 		{
@@ -51,13 +68,13 @@ bool FTPWorker::ConnectServer(wchar_t *pwszServer, wchar_t *pwszUser, wchar_t *p
 	else
 		dwErrorCode = GetLastError();
 
-	return false;
+	return FALSE;
 }
 
 
-bool FTPWorker::EnumerateFiles(bool bFirst)
+BOOL FTPWorker::EnumerateFiles(BOOL bFirst)
 {
-	bool bResult = false;
+	BOOL bResult = FALSE;
 	WIN32_FIND_DATA findData = { 0 };
 	static HINTERNET hFindHandle = 0;
 
@@ -92,14 +109,24 @@ bool FTPWorker::EnumerateFiles(bool bFirst)
 
 void FTPWorker::SetFileInfo(DWORD index, PFILE_INFO pInfo)
 {
+	if (pFileList.size() == 0 || pFileList.size() == index)
+	{
+		FILE_INFO fInfo = { 0 };
+		pFileList.push_back(fInfo);
+	}
+
 	if (index < pFileList.size())
 	{
 		pFileList[index] = *pInfo;
 	}
 }
 
+int FTPWorker::GetItemCount()
+{
+	return pFileList.size();
+}
 
-bool FTPWorker::FtpGetFileInfo(wchar_t *wszFile)
+BOOL FTPWorker::FtpGetFileInfo(wchar_t *wszFile)
 {
 	DWORD dwSizeLow = 0;
 	DWORD dwSizeHigh = 0;
@@ -109,43 +136,57 @@ bool FTPWorker::FtpGetFileInfo(wchar_t *wszFile)
 	wcscpy(wszFileDate, L"");
 	wcscpy(wszFileSize, L"");
 
-	HINTERNET hFile = FtpOpenFile(hFTPConnection, wszFile, GENERIC_READ, FTP_TRANSFER_TYPE_BINARY, 0);
+	HINTERNET hFile = FtpOpenFile(hFTPConnection, wszFile, GENERIC_READ, FTP_TRANSFER_TYPE_BINARY | INTERNET_FLAG_RELOAD, 0);
 	if (hFile)
 	{
 		dwSizeLow = FtpGetFileSize(hFile, &dwSizeHigh);
 		size = (dwSizeHigh << 16) | dwSizeLow;
 		_i64tow(size, wszFileSize, 10);
 
-		wchar_t wszCommand[256] = L"MDTM ";
+		/*wchar_t wszCommand[256] = L"MDTM ";
 		wcscat(wszCommand, wszFileName);
-		if (FtpCommand(hFTPConnection, false, FTP_TRANSFER_TYPE_BINARY, wszCommand, 0, 0))
-			wcscpy(wszFileDate, wszCommand);
+		if (FtpCommand(hFTPConnection, FALSE, FTP_TRANSFER_TYPE_BINARY, wszCommand, 0, 0))
+			wcscpy(wszFileDate, wszCommand);*/
 
 		InternetCloseHandle(hFile);
-		//return true;
 	}
-	return true;
+	return TRUE;
 }
 
 
-bool FTPWorker::OpenFile(wchar_t *pFileName, wchar_t *pNewFileName)
+BOOL FTPWorker::OpenFile(wchar_t *pFileName, wchar_t *pNewFileName)
 {
-	if (FtpGetFile(hFTPConnection, pFileName, pNewFileName, false, 0, FTP_TRANSFER_TYPE_BINARY, 0))
+	BOOL bResult = FALSE;
+
+	if (FtpGetFile(hFTPConnection, pFileName, pNewFileName, FALSE, 0, INTERNET_FLAG_TRANSFER_BINARY, 0))
 	{
-		return true;
+		bResult = TRUE;
+	}
+	else
+	{
+		dwErrorCode = GetLastError();
+		bResult = FALSE;
 	}
 
-	return false;
+	return bResult;
 }
 
 
-bool FTPWorker::UpdateFile(wchar_t *pFileName, wchar_t *pLocalFileName)
+BOOL FTPWorker::UpdateFile(wchar_t *pFileName, wchar_t *pLocalFileName)
 {
+	BOOL bResult = FALSE;
+
 	if (FtpPutFile(hFTPConnection, pLocalFileName, pFileName, FTP_TRANSFER_TYPE_BINARY, 0))
 	{
-		return true;
+		bResult = TRUE;
 	}
-	return false;
+	else
+	{
+		dwErrorCode = GetLastError();
+		bResult = FALSE;
+	}
+
+	return bResult;
 }
 
 
@@ -169,23 +210,23 @@ DWORD FTPWorker::GetErrorCode()
 	return dwErrorCode;
 }
 
-bool FTPWorker::IsConnected()
+BOOL FTPWorker::IsConnected()
 {
 	return bConnected;
 }
 
-void FTPWorker::SetItemReceived(DWORD nItem, bool bReceived)
+void FTPWorker::SetItemReceived(DWORD nItem, BOOL bReceived)
 {
 	if (nItem < pFileList.size())
 		pFileList[nItem].bReceived = bReceived;
 }
 
-bool FTPWorker::IsItemReceived(DWORD nItem)
+BOOL FTPWorker::IsItemReceived(DWORD nItem)
 {
 	if (nItem < pFileList.size())
 		return pFileList[nItem].bReceived;
 
-	return false;
+	return FALSE;
 }
 
 int FTPWorker::GetIndexByName(wchar_t *pFileNameToFind)
@@ -203,4 +244,11 @@ int FTPWorker::GetIndexByName(wchar_t *pFileNameToFind)
 		i++;
 	}
 	return index;
+}
+
+FILE_INFO* FTPWorker::GetFileInfoByIndex(DWORD dwIndex)
+{
+	if (dwIndex < pFileList.size())
+		return &pFileList[dwIndex];
+	return nullptr;
 }

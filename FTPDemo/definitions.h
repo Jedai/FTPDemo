@@ -12,6 +12,7 @@
 #define		IDC_UPDATE			1202
 #define		IDC_OPEN			1203
 #define		IDC_EXIT			1204
+#define		IDC_DOWNLOAD		1205
 
 #define		IDC_LIST1			1300
 

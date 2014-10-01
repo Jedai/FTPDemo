@@ -1,6 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
 
 class CFTPDemo : public CWinApp
 {

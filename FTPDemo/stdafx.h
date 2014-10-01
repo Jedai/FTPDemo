@@ -16,7 +16,4 @@
 #include <WinInet.h>
 #pragma comment(lib,"wininet.lib")
 
-
-#include <map>
-
 #include "definitions.h"

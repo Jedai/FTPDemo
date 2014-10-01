@@ -36,9 +36,6 @@
     <ClInclude Include="data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Directory_watcher.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CWaitDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -70,5 +67,8 @@
     <ResourceCompile Include="Resource.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="manifest.xml" />
   </ItemGroup>
 </Project>

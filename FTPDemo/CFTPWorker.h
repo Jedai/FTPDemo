@@ -16,7 +16,7 @@ class FTPWorker
 	HINTERNET hInetConnection = 0;
 	HINTERNET hFTPConnection = 0;
 
-	bool bConnected = false;
+	BOOL bConnected = FALSE;
 
 	std::vector<FILE_INFO> pFileList;
 
@@ -29,18 +29,22 @@ public:
 	wchar_t* GetCurrentFileSize();
 	wchar_t* GetCurrentFileDate();
 
-	bool FtpGetFileInfo(wchar_t*);
 	DWORD GetErrorCode();
-	bool IsConnected();
+	BOOL IsConnected();
 
 	void SetFileInfo(DWORD, PFILE_INFO);
 
+	int GetItemCount();
 	int GetIndexByName(wchar_t*);
-	void SetItemReceived(DWORD, bool);
-	bool IsItemReceived(DWORD);
+	FILE_INFO* GetFileInfoByIndex(DWORD);
+	void SetItemReceived(DWORD, BOOL);
+	BOOL IsItemReceived(DWORD);
 
-	bool ConnectServer(wchar_t*, wchar_t*, wchar_t*);
-	bool EnumerateFiles(bool);
-	bool OpenFile(wchar_t*, wchar_t*);
-	bool UpdateFile(wchar_t*, wchar_t*);
+	BOOL FtpGetFileInfo(wchar_t*);
+
+	BOOL ConnectServer(wchar_t*, wchar_t*, wchar_t*);
+	BOOL ReconnectServer();
+	BOOL EnumerateFiles(BOOL);
+	BOOL OpenFile(wchar_t*, wchar_t*);
+	BOOL UpdateFile(wchar_t*, wchar_t*);
 };

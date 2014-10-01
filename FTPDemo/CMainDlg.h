@@ -1,8 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
-#include "Directory_watcher.h"
-
 class FTPWorker;
 class CStyledListCtrl;
 
@@ -13,6 +10,7 @@ class CMainDlg : public CDialog
 	CButton *pUpdateButton = nullptr;
 	CButton *pOpenButton = nullptr;
 	CButton *pExitButton = nullptr;
+	CButton *pDownloadButton = nullptr;
 
 	CEdit *pEditBox = nullptr;
 	
@@ -24,9 +22,10 @@ class CMainDlg : public CDialog
 	HANDLE hWaitThread = 0;
 
 	FTPWorker *ftp = nullptr;
+
+	DWORD dwError = 0;
 	
 public:
-	std::map<CString, DWORD> List_cache;
 
 	enum { IDD = IDD_MAIN_DLG  };
 
@@ -36,14 +35,18 @@ public:
 	BOOL OnInitDialog();
 	
 	void SetListItemText(DWORD, DWORD, wchar_t*);
-	//CStyledListCtrl* GetListCtrl();
+	void SetListItemStyle(DWORD, DWORD);
+	
+	CStyledListCtrl* GetListCtrl();
 	FTPWorker* GetFTPConnection();
 
 	afx_msg void OnConnectButtonClick();
 	afx_msg void OnRefreshButtonClick();
 	afx_msg void OnOpenButtonClick();
+	afx_msg void OnDownloadButtonClick();
 	afx_msg void OnUpdateButtonClick();
 	afx_msg void OnExitButtonClick();
+	afx_msg void OnSelectionChanged(NMHDR*, LRESULT*);
 
 	DECLARE_MESSAGE_MAP()
 };
