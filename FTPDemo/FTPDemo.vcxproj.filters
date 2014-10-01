@@ -33,6 +33,9 @@
     <ClInclude Include="Directory_watcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CWaitDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -48,6 +51,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Directory_watcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WaitThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CWaitDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -24,6 +24,15 @@ public:
 	DWORD GetErrorCode();
 	bool IsConnected();
 
+<<<<<<< Updated upstream
+=======
+	void SetFileInfo(DWORD, PFILE_INFO);
+
+	int GetIndexByName(wchar_t*);
+	void SetItemReceived(DWORD, bool);
+	bool IsItemReceived(DWORD);
+
+>>>>>>> Stashed changes
 	bool ConnectServer(wchar_t*, wchar_t*, wchar_t*);
 	bool EnumerateFiles(bool);
 	bool OpenFile(wchar_t*, wchar_t*);

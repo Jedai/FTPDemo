@@ -8,30 +8,36 @@ class FTPWorker;
 
 class CMainDlg : public CDialog
 {
+	CButton *pConnectButton = nullptr;
+	CButton *pRefreshButton = nullptr;
+	CButton *pUpdateButton = nullptr;
+	CButton *pOpenButton = nullptr;
+	CButton *pExitButton = nullptr;
+
+	CEdit *pEditBox = nullptr;
+	
+	CStyledListCtrl *pListBox = nullptr;
+
+	WATCHER_PARAM watcherParam;
+	
+	HANDLE hNotificationThread = 0;
+	HANDLE hWaitThread = 0;
+
+	FTPWorker *ftp = nullptr;
 	
 public:
-	std::map<CString,DWORD> List_cache;
-	CListCtrl *pListBox;
-	CEdit *pEdit_FTP_server;	//; = ; (CEdit*)GetDlgItem(IDC_EDIT1);
-	CButton *pButton_Refresh;
-	CButton *pButton_Update;
-	CButton *pButton_Open;
-	CButton *pButton_Exit;
-	CButton *pButton_Connect;
-
-	Watcher_str struct_for_watcher;
-	FTPWorker *ftp;
-
-	HANDLE hNotificationThread = 0;
-
-public:
+	std::map<CString, DWORD> List_cache;
 
 	enum { IDD = IDD_MAIN_DLG  };
 
 	CMainDlg();
 	~CMainDlg();
 
-	virtual BOOL OnInitDialog();
+	BOOL OnInitDialog();
+	
+	void SetListItemText(DWORD, DWORD, wchar_t*);
+	//CStyledListCtrl* GetListCtrl();
+	FTPWorker* GetFTPConnection();
 
 	afx_msg void OnConnectButtonClick();
 	afx_msg void OnRefreshButtonClick();

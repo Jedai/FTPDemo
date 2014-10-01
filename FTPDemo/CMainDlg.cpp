@@ -1,7 +1,6 @@
+#include "stdafx.h"
 #include "CMainDlg.h"
 #include "CFTPWorker.h"
-
-
 
 BEGIN_MESSAGE_MAP(CMainDlg,CDialog)
 	ON_COMMAND(IDC_CONNECT, OnConnectButtonClick)
@@ -13,35 +12,41 @@ END_MESSAGE_MAP()
 
 CMainDlg::CMainDlg() : CDialog(CMainDlg::IDD)
 {	
-	ftp = 0;
 }
 
 CMainDlg::~CMainDlg()
 {
+	// terminate notification thread here
+	if (hNotificationThread)
+		TerminateThread(hNotificationThread, 0);
+
 	if (pListBox)
 		delete pListBox;
 	if (ftp)
 		delete ftp;
+
+	DeleteCriticalSection(&watcherParam.csListLock);
 }
 
 BOOL CMainDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	InitializeCriticalSection(&struct_for_watcher.List_lock);
+	pConnectButton = (CButton*)GetDlgItem(IDC_CONNECT);
+	pRefreshButton = (CButton*)GetDlgItem(IDC_REFRESH);
+	if (pRefreshButton)
+		pRefreshButton->EnableWindow(false);
+	pUpdateButton = (CButton*)GetDlgItem(IDC_UPDATE);
+	if (pUpdateButton)
+		pUpdateButton->EnableWindow(false);
+	pOpenButton = (CButton*)GetDlgItem(IDC_OPEN);
+	if (pOpenButton)
+		pOpenButton->EnableWindow(false);
+	pExitButton = (CButton*)GetDlgItem(IDC_EXIT);
 
-	pListBox = new CListCtrl();
+	pEditBox = (CEdit*)GetDlgItem(IDC_EDIT1);
 
-	pEdit_FTP_server = (CEdit*)GetDlgItem(IDC_EDIT1);
-	pButton_Refresh = (CButton*)GetDlgItem(IDC_REFRESH);
-	pButton_Update = (CButton*)GetDlgItem(IDC_UPDATE);
-	pButton_Open = (CButton*)GetDlgItem(IDC_OPEN);
-	pButton_Exit = (CButton*)GetDlgItem(IDC_EXIT);
-	pButton_Connect = (CButton*)GetDlgItem(IDC_CONNECT);
-
-	pButton_Refresh->EnableWindow(FALSE);
-	pButton_Update->EnableWindow(FALSE);
-	pButton_Open->EnableWindow(FALSE);
+	pListBox = new CStyledListCtrl();
 
 	RECT rect;
 	rect.left = 30;
@@ -67,8 +72,7 @@ BOOL CMainDlg::OnInitDialog()
 	pColumn.pszText = L"Modified";
 	pListBox->InsertColumn(2, &pColumn);
 
-	pListBox->EnableWindow(FALSE);
-
+	InitializeCriticalSection(&watcherParam.csListLock);
 
 	return FALSE;  
 }
@@ -82,33 +86,29 @@ void CMainDlg::OnConnectButtonClick()
 
 	if (ftp && !ftp->IsConnected()) 
 	{
-		wchar_t wszFTP[64] = L"node0.net2ftp.ru";                   // node0.net2ftp.ru
-		wchar_t *login = L"IL.job@yandex.ru"; // L"anonymous"
-		wchar_t *pass = L"af856f9c5ba5";      // L"anonymous"
-
-		//CEdit *pEdit = (CEdit*)GetDlgItem(IDC_EDIT1);
-
-		//pEdit->GetWindowTextW(wszFTP, 63);
-
+		wchar_t wszFTP[64] = L"node0.net2ftp.ru";                  
+		wchar_t login[64] = L"IL.job@yandex.ru"; 
+		wchar_t pass[64] = L"af856f9c5ba5";      
+		
 		if (ftp->ConnectServer(wszFTP, login, pass))
 		{
-			pButton_Refresh->EnableWindow(TRUE);
-			pButton_Update->EnableWindow(TRUE);
-			pButton_Open->EnableWindow(TRUE);
-			pListBox->EnableWindow(TRUE);
+			// start notification thread here
+			watcherParam.dlg = this;
+			DWORD dwLen = 255;
+
+			GetCurrentDirectory(dwLen, watcherParam.wszCurrentDir);
+			hNotificationThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)Directory_watcher_thread, &watcherParam, 0, 0);
 
 			// update list
 			OnRefreshButtonClick();
- 
+
+			pRefreshButton->EnableWindow(true);
 		}
 		else
 		{
-			CString err_msg;
-			err_msg.AppendFormat(L"Error = %d", ftp->GetErrorCode());
 			delete ftp;
-			MessageBoxW(err_msg.GetBuffer(), L"Can't connect to a ftp server", MB_ICONWARNING);
+			ftp = nullptr;
 		}
-
 	}
 }
 
@@ -118,9 +118,18 @@ void CMainDlg::OnRefreshButtonClick()
 	bool bFirst = true;
 
 	static int index = 0;
-
+	
 	if (ftp && ftp->IsConnected())
 	{		
+		WAIT_PARAM waitParam = { 0 };
+
+		HANDLE hWaitEvent = CreateEvent(NULL, TRUE, FALSE, L"RFRSH");
+		
+		waitParam.hEvent = hWaitEvent;
+		wcscpy(waitParam.wszDlgCaption, L"Refreshing directory...");
+
+		hWaitThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WaitThread, &waitParam, 0, 0);
+
 		pListBox->DeleteAllItems();
 
 		while (ftp->EnumerateFiles(bFirst))
@@ -131,16 +140,33 @@ void CMainDlg::OnRefreshButtonClick()
 
 			if (pFile)
 			{
-				EnterCriticalSection(&struct_for_watcher.List_lock);
-				List_cache[pFile] = index;
 				pListBox->InsertItem(index,pFile);
 
-				LeaveCriticalSection(&struct_for_watcher.List_lock);
+				FILE_INFO fInfo = { 0 };
+				wcscpy_s(fInfo.wszFileName, COUNTOFWCHAR(fInfo.wszFileName) / 2 - 1, pFile);
+
+				if ((pFile = ftp->GetCurrentFileDate()))
+				{
+					wcscpy_s(fInfo.wszFileDate, COUNTOFWCHAR(fInfo.wszFileDate) / 2 - 1, pFile);
+					pListBox->SetItemText(index, 2, pFile);
+				}
+				if ((pFile = ftp->GetCurrentFileSize()))
+				{
+					wcscpy_s(fInfo.wszFileSize, COUNTOFWCHAR(fInfo.wszFileSize) / 2 - 1, pFile);
+					pListBox->SetItemText(index, 1, pFile);
+				}
+
+				ftp->SetFileInfo(index, &fInfo);
+								
 				index++;
 			}
-
-			// update buttons
 		}
+		
+		pOpenButton->EnableWindow(true);
+		pOpenButton->EnableWindow(true);
+
+		ResetEvent(hWaitEvent);
+		CloseHandle(hWaitEvent);
 	}
 }
 
@@ -148,13 +174,13 @@ void CMainDlg::OnRefreshButtonClick()
 void CMainDlg::OnUpdateButtonClick()
 {
 	wchar_t wszRemoteFile[128];
-	wchar_t wszLocalFile[128];
+	//wchar_t wszLocalFile[128];
 
 	if (ftp && ftp->IsConnected())
 	{
 		int index = pListBox->GetSelectionMark();
 
-		wcscpy(wszRemoteFile,pListBox->GetItemText(index, 0));
+		wcscpy_s(wszRemoteFile, COUNTOFWCHAR(wszRemoteFile) - 1, pListBox->GetItemText(index, 0));
 
 		ftp->UpdateFile(wszRemoteFile, wszRemoteFile);
 	}
@@ -163,26 +189,56 @@ void CMainDlg::OnUpdateButtonClick()
 void CMainDlg::OnOpenButtonClick()
 {
 	wchar_t wszRemoteFile[128];
-	wchar_t wszLocalFile[128];
+	//wchar_t wszLocalFile[128];
 
 	if (ftp && ftp->IsConnected())
 	{
 		int index = pListBox->GetSelectionMark();
 
-		wcscpy(wszRemoteFile, pListBox->GetItemText(index, 0));
+		wcscpy_s(wszRemoteFile, COUNTOFWCHAR(wszRemoteFile) - 1, pListBox->GetItemText(index, 0));
 
-		ftp->OpenFile(wszRemoteFile, wszRemoteFile);
+		WAIT_PARAM waitParam = { 0 };
 
-		// shell execute to open file?
+		HANDLE hWaitEvent = CreateEvent(NULL, TRUE, FALSE, L"DWNLD");
+
+		waitParam.hEvent = hWaitEvent;
+		wcscpy(waitParam.wszDlgCaption, L"Downloading file...");
+
+		hWaitThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WaitThread, &waitParam, 0, 0);
+
+		if (ftp->OpenFile(wszRemoteFile, wszRemoteFile))
+		{
+			// mark it as "received"
+			ftp->SetItemReceived(index, true);
+			pListBox->SetItemStyle(index, LIS_BOLD);
+
+			ResetEvent(hWaitEvent);
+			CloseHandle(hWaitEvent);
+
+			// shell execute to open file?
+			ShellExecute(NULL, L"open", wszRemoteFile, NULL, NULL, SW_SHOW);
+		}
 	}
 }
 
 
 void CMainDlg::OnExitButtonClick()
 {
-	if (hNotificationThread)
-		TerminateThread(hNotificationThread, 0);
+	EndDialog(0);
+}
 
-	if (ftp)
-		delete ftp;
+
+/*CStyledListCtrl* CMainDlg::GetListCtrl()
+{
+	return pListBox;
+}*/
+
+void CMainDlg::SetListItemText(DWORD dwItem, DWORD dwSubItem, wchar_t *pwszText)
+{
+	pListBox->SetItemText(dwItem, dwSubItem, pwszText);
+}
+
+FTPWorker* CMainDlg::GetFTPConnection()
+{
+	return ftp;
 }
