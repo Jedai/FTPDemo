@@ -6,10 +6,10 @@
 DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 {
 
-	Watcher_str* watch_str = (Watcher_str*)lpParameter;
+	PWATCHER_PARAM watch_str = (PWATCHER_PARAM)lpParameter;
 	bool bWait = true;
 
-	HANDLE watch_dir = CreateFileW(watch_str->Current_dir, FILE_LIST_DIRECTORY, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS,NULL );
+	HANDLE watch_dir = CreateFileW(watch_str->wszCurrentDir, FILE_LIST_DIRECTORY, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS,NULL );
 	DWORD size_of_dir = 0x1000;
 	FILE_NOTIFY_INFORMATION* file_change_inf = (FILE_NOTIFY_INFORMATION*)VirtualAlloc(0,size_of_dir,MEM_COMMIT|MEM_RESERVE,PAGE_READWRITE);
 	DWORD ret_bytes = 0;
@@ -40,9 +40,9 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 				memcpy(buf_file_name,current_file_change_inf->FileName,file_length);
 				buf_file_name[file_length/sizeof(wchar_t)] = 0;
 
-				EnterCriticalSection(&watch_str->List_lock);
+				EnterCriticalSection(&watch_str->csListLock);
 
-				index_count = ((CMainDlg*)watch_str->dlg)->GetListCtrl()->GetItemCount();	
+				//index_count = ((CMainDlg*)watch_str->dlg)->GetListCtrl()->GetItemCount();	
 				it = list_cache->find(buf_file_name);
 				if (it != list_cache->end())
 				{
@@ -51,14 +51,14 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 					{
 						buf_file_name[file_length/sizeof(wchar_t)] = '*';
 						buf_file_name[file_length/sizeof(wchar_t) + 1*sizeof(wchar_t)] = 0;
-						((CMainDlg*)watch_str->dlg)->GetListCtrl()->InsertItem(index_in_map, buf_file_name); // remove before ????
+						((CMainDlg*)watch_str->dlg)->SetListItemText(index_in_map, 0, buf_file_name); // remove before ????
 					}
 				}
 				else
 				{
 					// error;
 				}
-				LeaveCriticalSection(&watch_str->List_lock);
+				LeaveCriticalSection(&watch_str->csListLock);
 
 				offset_cur = current_file_change_inf->NextEntryOffset;
 				current_file_change_inf = (FILE_NOTIFY_INFORMATION*)((DWORD)current_file_change_inf + (DWORD)current_file_change_inf->NextEntryOffset);

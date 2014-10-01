@@ -1,5 +1,6 @@
 #pragma once
 
+#include "stdafx.h"
 #include "Directory_watcher.h"
 
 class FTPWorker;
@@ -17,9 +18,10 @@ class CMainDlg : public CDialog
 	
 	CStyledListCtrl *pListBox = nullptr;
 
-	Watcher_str param;
+	WATCHER_PARAM watcherParam;
 	
 	HANDLE hNotificationThread = 0;
+	HANDLE hWaitThread = 0;
 
 	FTPWorker *ftp = nullptr;
 	
@@ -31,9 +33,10 @@ public:
 	CMainDlg();
 	~CMainDlg();
 
-	virtual BOOL OnInitDialog();
+	BOOL OnInitDialog();
 	
-	CStyledListCtrl* GetListCtrl();
+	void SetListItemText(DWORD, DWORD, wchar_t*);
+	//CStyledListCtrl* GetListCtrl();
 	FTPWorker* GetFTPConnection();
 
 	afx_msg void OnConnectButtonClick();

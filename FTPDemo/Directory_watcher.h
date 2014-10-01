@@ -2,13 +2,12 @@
 
 #include "stdafx.h"
 
-typedef struct _Watcher_str
+typedef struct _WATCHER_PARAM
 {
-	wchar_t Current_dir[256];
+	wchar_t wszCurrentDir[256];
 	CDialog* dlg;
-	CRITICAL_SECTION List_lock;
-
-} Watcher_str;
+	CRITICAL_SECTION csListLock;
+} WATCHER_PARAM,*PWATCHER_PARAM;
 
 
 

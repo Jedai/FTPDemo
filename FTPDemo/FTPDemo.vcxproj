@@ -61,6 +61,9 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>manifest.xml</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -85,6 +88,7 @@
     <ClInclude Include="CFTPWorker.h" />
     <ClInclude Include="CMainDlg.h" />
     <ClInclude Include="CStyledListCtrl.h" />
+    <ClInclude Include="CWaitDlg.h" />
     <ClInclude Include="data.h" />
     <ClInclude Include="definitions.h" />
     <ClInclude Include="Directory_watcher.h" />
@@ -95,8 +99,10 @@
     <ClCompile Include="CFTPWorker.cpp" />
     <ClCompile Include="CMainDlg.cpp" />
     <ClCompile Include="CStyledListCtrl.cpp" />
+    <ClCompile Include="CWaitDlg.cpp" />
     <ClCompile Include="Directory_watcher.cpp" />
-    </ItemGroup>
+    <ClCompile Include="WaitThread.cpp" />
+  </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />
   </ItemGroup>

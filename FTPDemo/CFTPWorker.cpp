@@ -187,3 +187,20 @@ bool FTPWorker::IsItemReceived(DWORD nItem)
 
 	return false;
 }
+
+int FTPWorker::GetIndexByName(wchar_t *pFileNameToFind)
+{
+	int index = -1;
+	int i = 0;
+
+	for each (auto var in pFileList)
+	{
+		if (!wcscmp(var.wszFileName, pFileNameToFind))
+		{
+			index = i;
+			break;
+		}
+		i++;
+	}
+	return index;
+}
