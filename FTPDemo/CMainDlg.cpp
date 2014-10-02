@@ -292,9 +292,15 @@ void CMainDlg::OnSelectionChanged(NMHDR* pNMHDR, LRESULT* pResult)
 		if (item > 0)
 		{
 			if (ftp->IsItemReceived(item))
+			{
 				pOpenButton->EnableWindow(TRUE);
+				pUpdateButton->EnableWindow(TRUE);
+			}
 			else
+			{
 				pOpenButton->EnableWindow(FALSE);
+				pUpdateButton->EnableWindow(FALSE);
+			}
 		}
 	}
 }
