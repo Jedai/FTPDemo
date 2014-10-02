@@ -49,7 +49,7 @@ BOOL FTPWorker::ConnectServer(wchar_t *pwszServer, wchar_t *pwszUser, wchar_t *p
 
 		if (hFTPConnection)
 		{
-			DWORD dwTimeout = 5000;
+			DWORD dwTimeout = 60000;
 
 			InternetSetOption(hFTPConnection, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT, &dwTimeout, sizeof(DWORD));
 			InternetSetOption(hFTPConnection, INTERNET_OPTION_DATA_SEND_TIMEOUT, &dwTimeout, sizeof(DWORD));
@@ -143,12 +143,19 @@ BOOL FTPWorker::FtpGetFileInfo(wchar_t *wszFile)
 		size = (dwSizeHigh << 16) | dwSizeLow;
 		_i64tow(size, wszFileSize, 10);
 
+		InternetCloseHandle(hFile);
+
 		/*wchar_t wszCommand[256] = L"MDTM ";
 		wcscat(wszCommand, wszFileName);
-		if (FtpCommand(hFTPConnection, FALSE, FTP_TRANSFER_TYPE_BINARY, wszCommand, 0, 0))
-			wcscpy(wszFileDate, wszCommand);*/
 
-		InternetCloseHandle(hFile);
+		HINTERNET hResult;
+		DWORD dwBytes = 0;
+
+		if (FtpCommand(hFTPConnection, TRUE, FTP_TRANSFER_TYPE_BINARY, wszCommand, 0, &hResult))
+		{
+			if(!InternetReadFile(hResult, wszFileDate, sizeof(wszFileDate)-1, &dwBytes))
+				wcscpy(wszFileDate, L"N/A");
+		}*/
 	}
 	return TRUE;
 }
@@ -251,4 +258,10 @@ FILE_INFO* FTPWorker::GetFileInfoByIndex(DWORD dwIndex)
 	if (dwIndex < pFileList.size())
 		return &pFileList[dwIndex];
 	return nullptr;
+}
+
+
+void FTPWorker::ClearFileList()
+{
+	pFileList.clear();
 }

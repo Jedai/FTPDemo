@@ -35,6 +35,7 @@ public:
 	void SetFileInfo(DWORD, PFILE_INFO);
 
 	int GetItemCount();
+	void ClearFileList();
 	int GetIndexByName(wchar_t*);
 	FILE_INFO* GetFileInfoByIndex(DWORD);
 	void SetItemReceived(DWORD, BOOL);

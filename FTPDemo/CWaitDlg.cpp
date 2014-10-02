@@ -29,5 +29,5 @@ BOOL CWaitDlg::OnInitDialog()
 	if (pParentDlg)
 		SetParent(pParentDlg);
 
-	return TRUE;
+	return FALSE;
 }

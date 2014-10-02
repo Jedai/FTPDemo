@@ -40,6 +40,8 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 				memcpy(buf_file_name, current_file_change_inf->FileName, file_length);
 				buf_file_name[file_length / sizeof(wchar_t)] = 0;
 
+				//EnterCriticalSection(&watch_str->csListLock);
+
 				if ((nIndex = pGUI->GetFTPConnection()->GetIndexByName(buf_file_name)) > 0)
 				{		// need lock ?
 					// file is present in list and was downloaded from server
@@ -69,6 +71,8 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 						}
 					}
 				} // if file found
+
+				//LeaveCriticalSection(&watch_str->csListLock);
 
 				offset_cur = current_file_change_inf->NextEntryOffset;
 				current_file_change_inf = (FILE_NOTIFY_INFORMATION*)((DWORD)current_file_change_inf + (DWORD)current_file_change_inf->NextEntryOffset);

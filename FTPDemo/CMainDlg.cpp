@@ -136,11 +136,15 @@ void CMainDlg::OnRefreshButtonClick()
 	if (ftp && ftp->IsConnected())
 	{		
 		WAIT_PARAM waitParam = { 0 };
+		waitParam.parent = this;
 		wcscpy(waitParam.wszDlgCaption, L"Refreshing directory...");
 
 		hWaitThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WaitThread, &waitParam, 0, 0);
 
 		pListBox->DeleteAllItems();
+		ftp->ClearFileList();
+
+		//EnterCriticalSection(&watcherParam.csListLock);
 
 		while (ftp->EnumerateFiles(bFirst))
 		{
@@ -171,6 +175,8 @@ void CMainDlg::OnRefreshButtonClick()
 				dwIndex++;
 			}
 		}
+
+		//LeaveCriticalSection(&watcherParam.csListLock);
 		
 		if (ftp->GetItemCount() > 0)
 		{
@@ -178,6 +184,8 @@ void CMainDlg::OnRefreshButtonClick()
 			//pUpdateButton->EnableWindow(TRUE);
 			//pOpenButton->EnableWindow(TRUE);
 		}
+		else
+			pDownloadButton->EnableWindow(FALSE);
 
 		TerminateThread(hWaitThread, 0);
 	}
@@ -218,17 +226,15 @@ void CMainDlg::OnDownloadButtonClick()
 
 		wcscpy_s(wszRemoteFile, COUNTOFWCHAR(wszRemoteFile) - 1, pListBox->GetItemText(index, 0));
 
-		WAIT_PARAM waitParam = { 0 };
-				
+		WAIT_PARAM waitParam = { 0 };				
 		wcscpy(waitParam.wszDlgCaption, L"Downloading file...");
-
 		hWaitThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WaitThread, &waitParam, 0, 0);
 		
 		if (ftp->OpenFile(wszRemoteFile, wszRemoteFile))
 		{
 			// mark it as "received"
-			ftp->SetItemReceived(index, TRUE);
 			pListBox->SetItemStyle(index, LIS_BOLD);
+			ftp->SetItemReceived(index, TRUE);
 		}
 		else
 		{
