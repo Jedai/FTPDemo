@@ -9,6 +9,7 @@ typedef struct _FILE_INFO
 	wchar_t wszFileDate[32];
 	wchar_t wszFileSize[32];
 	BOOL bReceived;
+	BOOL bChanged;
 }FILE_INFO, *PFILE_INFO;
 
 

@@ -38,11 +38,12 @@ public:
 	void ClearFileList();
 	int GetIndexByName(wchar_t*);
 	FILE_INFO* GetFileInfoByIndex(DWORD);
+
 	void SetItemReceived(DWORD, BOOL);
 	BOOL IsItemReceived(DWORD);
-
-	BOOL FtpGetFileInfo(wchar_t*);
-
+	void SetItemChanged(DWORD, BOOL);
+	BOOL IsItemChanged(DWORD);
+	
 	BOOL ConnectServer(wchar_t*, wchar_t*, wchar_t*);
 	BOOL ReconnectServer();
 	BOOL EnumerateFiles(BOOL);

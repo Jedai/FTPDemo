@@ -13,8 +13,11 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 	int nIndex = -1; // must be INT, function can return with -1 in error case
 
 	FILE_NOTIFY_INFORMATION* current_file_change_inf = 0;
+	SYSTEMTIME sysTime = { 0 };
 
-	wchar_t* buf_file_name = nullptr;
+	wchar_t *pwszFileDate = nullptr;
+	wchar_t *buf_file_name = nullptr;
+	wchar_t buff[20];
 
 	BOOL bWait = TRUE;
 
@@ -29,7 +32,7 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 		
 	while (bWait)
 	{
-		if (ReadDirectoryChangesW(watch_dir, file_change_inf, 0x1000, 0, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION, &ret_bytes, NULL, NULL))
+		if (ReadDirectoryChangesW(watch_dir, file_change_inf, 0x1000, 0, FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME, &ret_bytes, NULL, NULL))
 		{
 			// need to do do while for all files that can be in FILE_NOTIFY_INFORMATION
 			current_file_change_inf = file_change_inf;
@@ -62,10 +65,38 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 							break;
 
 						case FILE_ACTION_MODIFIED:
-						//case	FILE_ACTION_ADDED: ??
-							
-							wcscat(buf_file_name,L"*");
-							pGUI->SetListItemText(nIndex, 0, buf_file_name);
+											
+							if (pGUI->GetFTPConnection()->IsItemChanged(nIndex))
+							{
+								wcscat(buf_file_name, L"*");
+								pGUI->SetListItemText(nIndex, 0, buf_file_name);
+
+								if ((pwszFileDate = pGUI->GetFTPConnection()->GetFileInfoByIndex(nIndex)->wszFileDate))
+								{
+									memset(pwszFileDate, 0, wcslen(pwszFileDate)*sizeof(wchar_t));
+
+									GetSystemTime(&sysTime);
+
+									_itow(sysTime.wDay, buff, 10);
+									wcscpy(pwszFileDate, buff);
+									wcscat(pwszFileDate, L"/");
+									_itow(sysTime.wMonth, buff, 10);
+									wcscat(pwszFileDate, buff);
+									wcscat(pwszFileDate, L"/");
+									_itow(sysTime.wYear, buff, 10);
+									wcscat(pwszFileDate, buff);
+									wcscat(pwszFileDate, L"<->");
+									_itow(sysTime.wHour, buff, 10);
+									wcscat(pwszFileDate, buff);
+									wcscat(pwszFileDate, L":");
+									_itow(sysTime.wMinute, buff, 10);
+									wcscat(pwszFileDate, buff);
+
+									pGUI->SetListItemText(nIndex, 2, pwszFileDate);
+								}
+							}
+							else
+								pGUI->GetFTPConnection()->SetItemChanged(nIndex, TRUE);
 
 							break;
 						}
@@ -82,7 +113,6 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 		}
 		else
 		{
-
 		}
 	}
 

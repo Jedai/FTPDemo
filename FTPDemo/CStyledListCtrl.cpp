@@ -51,7 +51,7 @@ void CStyledListCtrl::OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult)
 
 	case CDDS_ITEMPREPAINT:
 		
-		if (pItems.size() && pItems[lplvcd->nmcd.dwItemSpec].dwItemStyle & LIS_BOLD)
+		if (pItems.size() && (pItems[lplvcd->nmcd.dwItemSpec].dwItemStyle & LIS_BOLD))
 		{
 			SelectObject(lplvcd->nmcd.hdc, txtFont.GetSafeHandle());
 			//lplvcd->clrText = RGB(255, 0, 0);
@@ -59,7 +59,7 @@ void CStyledListCtrl::OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult)
 			*pResult = CDRF_NEWFONT;
 		}
 		else
-			*pResult = CDRF_NOTIFYITEMDRAW;
+			*pResult = CDRF_DODEFAULT;
 		break;
 	
 	/*case CDDS_SUBITEM | CDDS_ITEMPREPAINT:

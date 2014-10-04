@@ -10,6 +10,7 @@ BEGIN_MESSAGE_MAP(CMainDlg,CDialog)
 	ON_COMMAND(IDC_UPDATE, OnUpdateButtonClick)
 	ON_COMMAND(IDC_EXIT, OnExitButtonClick)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST1, OnSelectionChanged)
+	ON_NOTIFY(NM_DBLCLK, IDC_LIST1, OnDoubleClick)
 END_MESSAGE_MAP()
 
 CMainDlg::CMainDlg() : CDialog(CMainDlg::IDD)
@@ -57,7 +58,7 @@ BOOL CMainDlg::OnInitDialog()
 	RECT rect;
 	rect.left = 30;
 	rect.top = 80;
-	rect.right = 345;
+	rect.right = 385;
 	rect.bottom = 300;
 
 	pListBox->Create(WS_CHILD | WS_VISIBLE | LVS_REPORT | LBS_HASSTRINGS | LBS_MULTICOLUMN, rect, this, IDC_LIST1);
@@ -67,15 +68,17 @@ BOOL CMainDlg::OnInitDialog()
 
 	pColumn.mask = LVCF_FMT | LVCF_TEXT | LVCF_WIDTH;
 	pColumn.fmt = LVCFMT_LEFT;
-	pColumn.cx = 100;
 
 	pColumn.pszText = L"Name";
+	pColumn.cx = 150;
 	pListBox->InsertColumn(0, &pColumn);
 
 	pColumn.pszText = L"Size";
+	pColumn.cx = 80;
 	pListBox->InsertColumn(1, &pColumn);
 
 	pColumn.pszText = L"Modified";
+	pColumn.cx = 120;
 	pListBox->InsertColumn(2, &pColumn);
 
 	InitializeCriticalSection(&watcherParam.csListLock);
@@ -92,20 +95,23 @@ void CMainDlg::OnConnectButtonClick()
 
 	if (ftp && !ftp->IsConnected()) 
 	{
-		wchar_t wszFTP[64] = L"node0.net2ftp.ru";                  
-		wchar_t login[64] = L"IL.job@yandex.ru"; 
-		wchar_t pass[64] = L"af856f9c5ba5";      
+		wchar_t wszFTP[64] = L"192.168.1.3";// L"node0.net2ftp.ru";
+		wchar_t login[64] = L"FTPAdmin"; // L"IL.job@yandex.ru";
+		wchar_t pass[64] = L"admin1234"; // L"af856f9c5ba5";
 		
 		WAIT_PARAM waitParam = { 0 };
 
-		waitParam.parent = this;
+		waitParam.parent = nullptr;
 		wcscpy(waitParam.wszDlgCaption, L"Connecting...");
 
 		hWaitThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WaitThread, &waitParam, 0, 0);
 
 		if (ftp->ConnectServer(wszFTP, login, pass))
 		{
-			TerminateThread(hWaitThread, 0);
+			pEditBox->SetWindowText(wszFTP);
+
+			if (hWaitThread)
+				TerminateThread(hWaitThread, 0);
 
 			// start notification thread here
 			watcherParam.dlg = this;
@@ -123,6 +129,9 @@ void CMainDlg::OnConnectButtonClick()
 		{
 			delete ftp;
 			ftp = nullptr;
+
+			if (hWaitThread)
+				TerminateThread(hWaitThread, 0);
 		}
 	}
 }
@@ -136,7 +145,7 @@ void CMainDlg::OnRefreshButtonClick()
 	if (ftp && ftp->IsConnected())
 	{		
 		WAIT_PARAM waitParam = { 0 };
-		waitParam.parent = this;
+		waitParam.parent = nullptr;
 		wcscpy(waitParam.wszDlgCaption, L"Refreshing directory...");
 
 		hWaitThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WaitThread, &waitParam, 0, 0);
@@ -150,24 +159,24 @@ void CMainDlg::OnRefreshButtonClick()
 		{
 			bFirst = FALSE;
 
-			wchar_t *pFile = ftp->GetCurrentFileName();
+			wchar_t *pData = ftp->GetCurrentFileName();
 
-			if (pFile)
+			if (pData)
 			{
-				pListBox->InsertItem(dwIndex,pFile);
+				pListBox->InsertItem(dwIndex, pData);
 
 				FILE_INFO fInfo = { 0 };
-				wcscpy_s(fInfo.wszFileName, COUNTOFWCHAR(fInfo.wszFileName) / 2 - 1, pFile);
+				wcscpy_s(fInfo.wszFileName, COUNTOFWCHAR(fInfo.wszFileName) - 1, pData);
 
-				if ((pFile = ftp->GetCurrentFileDate()))
+				if ((pData = ftp->GetCurrentFileDate()))
 				{
-					wcscpy_s(fInfo.wszFileDate, COUNTOFWCHAR(fInfo.wszFileDate) / 2 - 1, pFile);
-					pListBox->SetItemText(dwIndex, 2, pFile);
+					wcscpy_s(fInfo.wszFileDate, COUNTOFWCHAR(fInfo.wszFileDate) - 1, pData);
+					pListBox->SetItemText(dwIndex, 2, pData);
 				}
-				if ((pFile = ftp->GetCurrentFileSize()))
+				if ((pData = ftp->GetCurrentFileSize()))
 				{
-					wcscpy_s(fInfo.wszFileSize, COUNTOFWCHAR(fInfo.wszFileSize) / 2 - 1, pFile);
-					pListBox->SetItemText(dwIndex, 1, pFile);
+					wcscpy_s(fInfo.wszFileSize, COUNTOFWCHAR(fInfo.wszFileSize) - 1, pData);
+					pListBox->SetItemText(dwIndex, 1, pData);
 				}
 
 				ftp->SetFileInfo(dwIndex, &fInfo);
@@ -187,7 +196,8 @@ void CMainDlg::OnRefreshButtonClick()
 		else
 			pDownloadButton->EnableWindow(FALSE);
 
-		TerminateThread(hWaitThread, 0);
+		if (hWaitThread)
+			TerminateThread(hWaitThread, 0);
 	}
 }
 
@@ -201,17 +211,23 @@ void CMainDlg::OnUpdateButtonClick()
 	{
 		int index = pListBox->GetSelectionMark();
 
-		wcscpy_s(wszRemoteFile, COUNTOFWCHAR(wszRemoteFile) - 1, pListBox->GetItemText(index, 0));
+		wcscpy_s(wszRemoteFile, COUNTOFWCHAR(wszRemoteFile) - 1, ftp->GetFileInfoByIndex(index)->wszFileName);
 
 		WAIT_PARAM waitParam = { 0 };
+		waitParam.parent = nullptr;
 		wcscpy(waitParam.wszDlgCaption, L"Uploading file...");
 		hWaitThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WaitThread, &waitParam, 0, 0);
 
 		if (ftp->UpdateFile(wszRemoteFile, wszRemoteFile))
 		{
+			ftp->SetItemChanged(index, FALSE);
+
 			pListBox->SetItemStyle(index, ~LIS_BOLD);
+			pListBox->SetItemText(index, 0, wszRemoteFile);
 		}
-		TerminateThread(hWaitThread, 0);
+
+		if (hWaitThread)
+			TerminateThread(hWaitThread, 0);
 	}
 }
 
@@ -224,24 +240,26 @@ void CMainDlg::OnDownloadButtonClick()
 	{
 		int index = pListBox->GetSelectionMark();
 
-		wcscpy_s(wszRemoteFile, COUNTOFWCHAR(wszRemoteFile) - 1, pListBox->GetItemText(index, 0));
+		wcscpy_s(wszRemoteFile, COUNTOFWCHAR(wszRemoteFile) - 1, ftp->GetFileInfoByIndex(index)->wszFileName);
 
 		WAIT_PARAM waitParam = { 0 };				
+		waitParam.parent = nullptr;
 		wcscpy(waitParam.wszDlgCaption, L"Downloading file...");
 		hWaitThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WaitThread, &waitParam, 0, 0);
 		
 		if (ftp->OpenFile(wszRemoteFile, wszRemoteFile))
 		{
 			// mark it as "received"
-			pListBox->SetItemStyle(index, LIS_BOLD);
 			ftp->SetItemReceived(index, TRUE);
+			pListBox->SetItemStyle(index, LIS_BOLD);
 		}
 		else
 		{
 			dwError = ftp->GetErrorCode();
 		}
 
-		TerminateThread(hWaitThread, 0);
+		if (hWaitThread)
+			TerminateThread(hWaitThread, 0);
 	}
 }
 
@@ -309,4 +327,9 @@ void CMainDlg::OnSelectionChanged(NMHDR* pNMHDR, LRESULT* pResult)
 			}
 		}
 	}
+}
+
+void CMainDlg::OnDoubleClick(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	OnOpenButtonClick();
 }

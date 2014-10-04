@@ -47,6 +47,7 @@ public:
 	afx_msg void OnUpdateButtonClick();
 	afx_msg void OnExitButtonClick();
 	afx_msg void OnSelectionChanged(NMHDR*, LRESULT*);
+	afx_msg void OnDoubleClick(NMHDR*, LRESULT*);
 
 	DECLARE_MESSAGE_MAP()
 };
