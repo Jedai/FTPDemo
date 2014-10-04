@@ -56,7 +56,10 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 						case FILE_ACTION_REMOVED:
 
 							// mark it as 'not downloaded' with normal font
+							EnterCriticalSection(&watch_str->csListLock);
 							pGUI->GetFTPConnection()->SetItemReceived(nIndex, FALSE);
+							LeaveCriticalSection(&watch_str->csListLock);
+
 							pGUI->SetListItemStyle(nIndex, ~LIS_BOLD);
 
 							// remove '*' if marked
@@ -73,6 +76,8 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 
 								if ((pwszFileDate = pGUI->GetFTPConnection()->GetFileInfoByIndex(nIndex)->wszFileDate))
 								{
+									EnterCriticalSection(&watch_str->csListLock);
+
 									memset(pwszFileDate, 0, wcslen(pwszFileDate)*sizeof(wchar_t));
 
 									GetSystemTime(&sysTime);
@@ -93,6 +98,7 @@ DWORD WINAPI Directory_watcher_thread(LPVOID lpParameter)
 									wcscat(pwszFileDate, buff);
 
 									pGUI->SetListItemText(nIndex, 2, pwszFileDate);
+									LeaveCriticalSection(&watch_str->csListLock);
 								}
 							}
 							else

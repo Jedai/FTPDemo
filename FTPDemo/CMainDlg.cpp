@@ -179,7 +179,9 @@ void CMainDlg::OnRefreshButtonClick()
 					pListBox->SetItemText(dwIndex, 1, pData);
 				}
 
+				EnterCriticalSection(&watcherParam.csListLock);
 				ftp->SetFileInfo(dwIndex, &fInfo);
+				LeaveCriticalSection(&watcherParam.csListLock);
 								
 				dwIndex++;
 			}
@@ -220,7 +222,9 @@ void CMainDlg::OnUpdateButtonClick()
 
 		if (ftp->UpdateFile(wszRemoteFile, wszRemoteFile))
 		{
+			EnterCriticalSection(&watcherParam.csListLock);
 			ftp->SetItemChanged(index, FALSE);
+			LeaveCriticalSection(&watcherParam.csListLock);
 
 			pListBox->SetItemStyle(index, ~LIS_BOLD);
 			pListBox->SetItemText(index, 0, wszRemoteFile);
@@ -250,7 +254,10 @@ void CMainDlg::OnDownloadButtonClick()
 		if (ftp->OpenFile(wszRemoteFile, wszRemoteFile))
 		{
 			// mark it as "received"
+			EnterCriticalSection(&watcherParam.csListLock);
 			ftp->SetItemReceived(index, TRUE);
+			LeaveCriticalSection(&watcherParam.csListLock);
+
 			pListBox->SetItemStyle(index, LIS_BOLD);
 		}
 		else
